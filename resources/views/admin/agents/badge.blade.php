@@ -634,7 +634,7 @@
 
                     <!-- Pill -->
                     <div class="badge-pill">
-                        <span>{{ $agent->fonction ?? $agent->structure_affectation ?? 'AGENT DE L\'ÉTAT' }}</span>
+                        <span>{{ $agent->poste ?? $agent->fonction ?? $agent->service ?? $agent->structure_affectation ?? 'AGENT DE L\'ÉTAT' }}</span>
                         <div class="dots"></div>
                     </div>
 
@@ -659,14 +659,14 @@
                             <div class="info-divider"></div>
                             <span class="info-label">Service</span>
                             <span class="info-sep">:</span>
-                            <span class="info-value info-value-light" title="{{ $agent->structure_affectation ?? 'Non renseigné' }}">{{ $agent->structure_affectation ?? 'Non renseigné' }}</span>
+                            <span class="info-value info-value-light" title="{{ $agent->service ?? $agent->structure_affectation ?? 'Non renseigné' }}">{{ $agent->service ?? $agent->structure_affectation ?? 'Non renseigné' }}</span>
                         </div>
                         <div class="info-row">
                             <div class="info-icon"><i class="fa-solid fa-briefcase"></i></div>
                             <div class="info-divider"></div>
                             <span class="info-label">Fonction</span>
                             <span class="info-sep">:</span>
-                            <span class="info-value info-value-light" title="{{ $agent->fonction ?? 'Non renseigné' }}">{{ $agent->fonction ?? 'Non renseigné' }}</span>
+                            <span class="info-value info-value-light" title="{{ $agent->poste ? ($agent->fonction ? $agent->poste . ' / ' . $agent->fonction : $agent->poste) : ($agent->fonction ?? 'Non renseigné') }}">{{ $agent->poste ? ($agent->fonction ? $agent->poste . ' / ' . $agent->fonction : $agent->poste) : ($agent->fonction ?? 'Non renseigné') }}</span>
                         </div>
                     </div>
 

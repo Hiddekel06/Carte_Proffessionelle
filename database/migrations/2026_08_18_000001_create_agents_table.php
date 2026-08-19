@@ -20,7 +20,9 @@ return new class extends Migration
             $table->string('email')->nullable();
             $table->string('telephone')->nullable();
             $table->string('structure_affectation')->nullable();
+            $table->string('service')->nullable();
             $table->string('fonction')->nullable();
+            $table->string('poste')->nullable();
             $table->date('date_integration_fp')->nullable();
             $table->string('photo')->nullable();
             $table->timestamps();

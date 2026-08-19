@@ -24,7 +24,9 @@ class Agent extends Model
         'email',
         'telephone',
         'structure_affectation',
+        'service',
         'fonction',
+        'poste',
         'date_integration_fp',
         'photo',
     ];

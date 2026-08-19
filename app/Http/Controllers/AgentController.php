@@ -30,7 +30,9 @@ class AgentController extends Controller
                   ->orWhere('nom', 'like', "%{$search}%")
                   ->orWhere('prenom', 'like', "%{$search}%")
                   ->orWhere('structure_affectation', 'like', "%{$search}%")
-                  ->orWhere('fonction', 'like', "%{$search}%");
+                  ->orWhere('service', 'like', "%{$search}%")
+                  ->orWhere('fonction', 'like', "%{$search}%")
+                  ->orWhere('poste', 'like', "%{$search}%");
             });
         }
 
@@ -64,7 +66,9 @@ class AgentController extends Controller
             'email' => 'nullable|email|max:255',
             'telephone' => 'nullable|string|max:50',
             'structure_affectation' => 'nullable|string|max:255',
+            'service' => 'nullable|string|max:255',
             'fonction' => 'nullable|string|max:255',
+            'poste' => 'nullable|string|max:255',
             'date_integration_fp' => 'nullable|date',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ], [
@@ -110,7 +114,9 @@ class AgentController extends Controller
             'email' => 'nullable|email|max:255',
             'telephone' => 'nullable|string|max:50',
             'structure_affectation' => 'nullable|string|max:255',
+            'service' => 'nullable|string|max:255',
             'fonction' => 'nullable|string|max:255',
+            'poste' => 'nullable|string|max:255',
             'date_integration_fp' => 'nullable|date',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ], [
@@ -172,11 +178,13 @@ class AgentController extends Controller
             'A1' => 'matricule',
             'B1' => 'prenom',
             'C1' => 'nom',
-            'D1' => 'fonction',
-            'E1' => 'structure_affectation',
-            'F1' => 'telephone',
-            'G1' => 'email',
-            'H1' => 'date_integration_fp',
+            'D1' => 'structure_affectation',
+            'E1' => 'service',
+            'F1' => 'fonction',
+            'G1' => 'poste',
+            'H1' => 'telephone',
+            'I1' => 'email',
+            'J1' => 'date_integration_fp',
         ];
 
         foreach ($headers as $cell => $value) {
@@ -184,7 +192,7 @@ class AgentController extends Controller
         }
 
         // Style de l'en-tête (Vert institutionnel et texte blanc)
-        $sheet->getStyle('A1:H1')->applyFromArray([
+        $sheet->getStyle('A1:J1')->applyFromArray([
             'font' => [
                 'bold' => true,
                 'color' => ['rgb' => 'FFFFFF'],
@@ -203,10 +211,10 @@ class AgentController extends Controller
 
         // Exemples d'agents
         $examples = [
-            ['123456A', 'Kouassi Jean', 'KOUAME', 'Ingénieur Informaticien', 'Direction des Systèmes d\'Information', '+2250707070707', 'jean.kouame@fonctionpublique.gouv.ci', '2018-04-15'],
-            ['654321B', 'Aminata', 'TRAORE', 'Gestionnaire RH', 'Direction des Ressources Humaines', '+2250505050505', 'aminata.traore@fonctionpublique.gouv.ci', '2020-10-01'],
-            ['789123C', 'Marcelle Aya', 'N\'GUESSAN', 'Chef de Service Formation', 'Direction de la Formation', '+2250101010101', 'marcelle.nguessan@fonctionpublique.gouv.ci', '2015-02-20'],
-            ['456789D', 'Yao Patrick', 'KOUADIO', '', 'Service Courrier', '', '', ''], // Démonstration avec champs optionnels vides
+            ['123456A', 'Kouassi Jean', 'KOUAME', 'Ministère de la Fonction Publique', 'Direction des Systèmes d\'Information', 'Analyste Développeur', 'Directeur', '+2250707070707', 'jean.kouame@fonctionpublique.gouv.ci', '2018-04-15'],
+            ['654321B', 'Aminata', 'TRAORE', 'Ministère des Finances', 'Direction des Ressources Humaines', 'Gestionnaire RH', 'Chef de Service', '+2250505050505', 'aminata.traore@fonctionpublique.gouv.ci', '2020-10-01'],
+            ['789123C', 'Marcelle Aya', 'N\'GUESSAN', 'Ministère de l\'Éducation', 'Direction de la Formation', 'Formateur', 'Inspecteur', '+2250101010101', 'marcelle.nguessan@fonctionpublique.gouv.ci', '2015-02-20'],
+            ['456789D', 'Yao Patrick', 'KOUADIO', 'Ministère de la Santé', 'Service Courrier', 'Agent Administratif', '', '', '', ''], // Démonstration avec champs optionnels vides
         ];
 
         $rowNum = 2;
@@ -221,7 +229,7 @@ class AgentController extends Controller
         }
 
         // Auto-dimensionnement des colonnes
-        foreach (range('A', 'H') as $col) {
+        foreach (range('A', 'J') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
@@ -245,13 +253,13 @@ class AgentController extends Controller
             'Content-Disposition' => 'attachment; filename="modele_importation_agents.csv"',
         ];
 
-        $columns = ['matricule', 'prenom', 'nom', 'fonction', 'structure_affectation', 'telephone', 'email', 'date_integration_fp'];
+        $columns = ['matricule', 'prenom', 'nom', 'structure_affectation', 'service', 'fonction', 'poste', 'telephone', 'email', 'date_integration_fp'];
         
         $examples = [
-            ['123456A', 'Kouassi Jean', 'KOUAME', 'Ingénieur Informaticien', 'Direction des Systèmes d\'Information', '+2250707070707', 'jean.kouame@fonctionpublique.gouv.ci', '2018-04-15'],
-            ['654321B', 'Aminata', 'TRAORE', 'Gestionnaire RH', 'Direction des Ressources Humaines', '+2250505050505', 'aminata.traore@fonctionpublique.gouv.ci', '2020-10-01'],
-            ['789123C', 'Marcelle Aya', 'N\'GUESSAN', 'Chef de Service Formation', 'Direction de la Formation', '+2250101010101', 'marcelle.nguessan@fonctionpublique.gouv.ci', '2015-02-20'],
-            ['456789D', 'Yao Patrick', 'KOUADIO', '', 'Service Courrier', '', '', ''],
+            ['123456A', 'Kouassi Jean', 'KOUAME', 'Ministère de la Fonction Publique', 'Direction des Systèmes d\'Information', 'Analyste Développeur', 'Directeur', '+2250707070707', 'jean.kouame@fonctionpublique.gouv.ci', '2018-04-15'],
+            ['654321B', 'Aminata', 'TRAORE', 'Ministère des Finances', 'Direction des Ressources Humaines', 'Gestionnaire RH', 'Chef de Service', '+2250505050505', 'aminata.traore@fonctionpublique.gouv.ci', '2020-10-01'],
+            ['789123C', 'Marcelle Aya', 'N\'GUESSAN', 'Ministère de l\'Éducation', 'Direction de la Formation', 'Formateur', 'Inspecteur', '+2250101010101', 'marcelle.nguessan@fonctionpublique.gouv.ci', '2015-02-20'],
+            ['456789D', 'Yao Patrick', 'KOUADIO', 'Ministère de la Santé', 'Service Courrier', 'Agent Administratif', '', '', '', ''],
         ];
 
         $callback = function() use ($columns, $examples) {
@@ -405,8 +413,10 @@ class AgentController extends Controller
             $nom = $getVal(['nom', 'noms', 'lastname', 'last_name', 'nomdefamille']);
             $email = $getVal(['email', 'courriel', 'mail', 'emailprofessionnel']);
             $telephone = $getVal(['telephone', 'tel', 'phone', 'contact', 'mobile', 'cellulaire']);
-            $structure = $getVal(['structureaffectation', 'structure', 'direction', 'service', 'ministere', 'departement', 'affectation']);
-            $fonction = $getVal(['fonction', 'poste', 'emploi', 'grade', 'titre']);
+            $structure = $getVal(['structureaffectation', 'structure', 'ministere', 'departement', 'affectation']);
+            $service = $getVal(['service', 'direction', 'division', 'unite', 'departementservice']);
+            $fonction = $getVal(['fonction', 'profession', 'metier', 'corps', 'grade']);
+            $poste = $getVal(['poste', 'titre', 'emploi', 'role', 'responsabilite', 'charge']);
             $dateIntegration = $getVal(['dateintegrationfp', 'dateintegration', 'datepriseservice', 'integration', 'dateentree']);
 
             // Validation stricte uniquement sur les champs MANDATORY (Matricule, Nom, Prénom)
@@ -475,7 +485,9 @@ class AgentController extends Controller
                     'email' => $validatedEmail ?? $existingAgent->email,
                     'telephone' => $telephone ?? $existingAgent->telephone,
                     'structure_affectation' => $structure ?? $existingAgent->structure_affectation,
+                    'service' => $service ?? $existingAgent->service,
                     'fonction' => $fonction ?? $existingAgent->fonction,
+                    'poste' => $poste ?? $existingAgent->poste,
                     'date_integration_fp' => $formattedDate ?? $existingAgent->date_integration_fp,
                 ]);
                 $updatedCount++;
@@ -488,7 +500,9 @@ class AgentController extends Controller
                     'email' => $validatedEmail,
                     'telephone' => $telephone,
                     'structure_affectation' => $structure,
+                    'service' => $service,
                     'fonction' => $fonction,
+                    'poste' => $poste,
                     'date_integration_fp' => $formattedDate,
                 ]);
                 $addedCount++;

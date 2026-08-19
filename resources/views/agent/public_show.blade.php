@@ -1,280 +1,888 @@
 <!DOCTYPE html>
-<html lang="fr" class="h-full bg-slate-100 text-slate-800">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fiche Agent - {{ $agent->nom_complet }} (Matricule {{ $agent->matricule }})</title>
+
+    <title>Fiche Agent - {{ $agent->nom_complet }} (Matricule {{ $agent->matricule }}) | Ministère de la Fonction Publique</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
     <link rel="shortcut icon" type="image/png" href="{{ asset('favicon.png') }}">
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-    <!-- Tailwind CSS CDN -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        emerald: {
-                            50: '#ecfdf5',
-                            100: '#d1fae5',
-                            500: '#10b981',
-                            600: '#059669',
-                            700: '#047857',
-                            800: '#065f46',
-                            900: '#064e3b',
-                        },
-                        amber: {
-                            50: '#fffbeb',
-                            100: '#fef3c7',
-                            400: '#fbbf24',
-                            500: '#f59e0b',
-                            600: '#d97706',
-                            800: '#92400e',
-                        },
-                        orange: {
-                            50: '#fff7ed',
-                            100: '#ffedd5',
-                            500: '#f97316',
-                            600: '#ea580c',
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        ministry: '#00843F',
+                        ministryDark: '#006B34',
+                        yellow: '#FCC207',
+                        secondary: '#575a7b',
+                        green: '#198754'
                     }
                 }
             }
         }
     </script>
-    
+
     <style>
-        @media print {
-            body { background: white !important; color: black !important; }
-            .no-print { display: none !important; }
-            .print-card { box-shadow: none !important; border: 2px solid #059669 !important; background: white !important; color: black !important; }
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+                         BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #f5f7f8;
+            color: #1e293b;
+        }
+
+        /* =========================
+           HERO
+        ========================= */
+        .hero {
+            background:
+                radial-gradient(
+                    circle at 90% 20%,
+                    rgba(252,194,7,.16),
+                    transparent 25%
+                ),
+                radial-gradient(
+                    circle at 5% 90%,
+                    rgba(255,255,255,.08),
+                    transparent 30%
+                ),
+                linear-gradient(
+                    135deg,
+                    #006B34 0%,
+                    #00843F 55%,
+                    #198754 100%
+                );
+        }
+
+        /* =========================
+           CARDS
+        ========================= */
+        .info-card {
+            transition:
+                transform .2s ease,
+                box-shadow .2s ease,
+                border-color .2s ease;
+        }
+
+        .info-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(15, 23, 42, .07);
+        }
+
+        .quick-card {
+            transition: all .2s ease;
+        }
+
+        .quick-card:hover {
+            transform: translateY(-3px);
+        }
+
+        /* =========================
+           PHOTO
+        ========================= */
+        .photo-wrapper {
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(0,132,63,.12),
+                    rgba(252,194,7,.15)
+                );
+        }
+
+        /* =========================
+           MOBILE
+        ========================= */
+        @media (max-width: 640px) {
+            .quick-card:hover,
+            .info-card:hover {
+                transform: none;
+            }
         }
     </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-slate-100 via-amber-50/30 to-emerald-50/40 flex flex-col justify-between items-center p-4 sm:p-6 font-sans">
 
-    <!-- Top Security Status Bar -->
-    <div class="w-full max-w-lg mb-6 no-print">
-        <div class="bg-white/90 border border-emerald-200 rounded-2xl p-3.5 flex items-center justify-between shadow-md backdrop-blur-md">
-            <div class="flex items-center space-x-3">
-                <span class="relative flex h-3 w-3">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-600"></span>
-                </span>
-                <span class="text-xs font-extrabold tracking-wide text-emerald-800 uppercase">Fiche Officielle Vérifiée</span>
-            </div>
-            <span class="text-[11px] font-bold text-amber-800 bg-amber-100 px-3 py-1 rounded-full border border-amber-300 shadow-xs">Lecture seule</span>
-        </div>
+<body>
+
+<!-- =========================================================
+     HEADER
+========================================================= -->
+<header class="bg-white border-b border-slate-100">
+
+    <!-- Bande institutionnelle -->
+    <div class="h-1 flex">
+        <div class="flex-1 bg-ministry"></div>
+        <div class="w-16 bg-yellow"></div>
     </div>
 
-    <!-- Agent Digital Card -->
-    <div id="fiche-agent-card" class="w-full max-w-lg print-card bg-white border border-slate-200/80 rounded-3xl shadow-2xl overflow-hidden relative">
-        
-        <!-- Header Banner (Vert profond raffiné) -->
-        <div class="relative overflow-hidden" style="background-color: #052e16; height: 9rem;">
-            <!-- Subtle dot-pattern texture overlay -->
-            <div class="absolute inset-0 opacity-[0.07]" style="background-image: radial-gradient(circle, #fff 1px, transparent 1px); background-size: 18px 18px;"></div>
-            <!-- Very subtle inner vignette -->
-            <div class="absolute inset-0" style="background: radial-gradient(ellipse at 60% 50%, #064e3b88 0%, #052e16cc 100%);"></div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="h-[68px] flex items-center justify-between">
 
-            <!-- Bottom gold accent line — two-tone, no orange -->
-            <div class="absolute bottom-0 left-0 right-0 flex" style="height: 3px;">
-                <div class="flex-1" style="background: linear-gradient(90deg, #92400e, #d97706);"></div>
-                <div class="flex-1" style="background: linear-gradient(90deg, #d97706, #fbbf24);"></div>
-            </div>
-
-            <!-- Content -->
-            <div class="relative z-10 h-full px-6 pt-6 flex justify-between items-start">
-                <div>
-                    <span style="font-size: 9px; letter-spacing: 0.18em;" class="font-bold uppercase text-emerald-300 block mb-1.5"></span>
-                    <span class="text-[11px] font-extrabold tracking-widest text-amber-200 uppercase border border-amber-500/40 px-3 py-1 rounded-lg" style="background: rgba(0,0,0,0.25); backdrop-filter: blur(4px);">
-                        Carte d'Agent Numérique
-                    </span>
+            <!-- LOGO + NOM -->
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center shrink-0">
+                    <img
+                        src="{{ asset('images/MFPremove.png') }}"
+                        alt="Logo du Ministère"
+                        class="max-w-full max-h-full object-contain"
+                        onerror="this.src='{{ asset('favicon.png') }}'"
+                    >
                 </div>
 
-            </div>
-        </div>
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[8px] sm:text-[9px] uppercase tracking-[.14em] font-bold text-ministry">
+                            République du Sénégal
+                        </span>
+                    </div>
 
-        <!-- Agent Photo & Badge Info -->
-        <div class="px-6 pb-6 pt-0 relative">
-            
-            <!-- Avatar + Matricule — layout vertical responsive -->
-            <div class="flex items-end justify-between -mt-16 mb-1">
-                <!-- Photo -->
-                <div class="relative group flex-shrink-0">
-                    <!-- Anneau extérieur vert profond -->
-                    <div class="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl shadow-2xl overflow-hidden" style="padding: 3px; background-color: #052e16;">
-                        <!-- Anneau intérieur doré -->
-                        <div class="w-full h-full rounded-[13px] overflow-hidden" style="padding: 2px; background-color: #d97706;">
-                            <!-- Photo — overflow:hidden + image-rendering pour netteté maximale -->
-                            <div class="w-full h-full overflow-hidden" style="border-radius: 11px;">
+                    <h1 class="text-[11px] sm:text-sm font-extrabold text-slate-900 leading-tight truncate">
+                        Ministère de la Fonction Publique
+                    </h1>
+
+                    <p class="text-[9px] sm:text-[11px] text-secondary leading-tight">
+                        et de la Réforme du Service Public
+                    </p>
+                </div>
+            </div>
+
+            <!-- Annuaire badge -->
+            <div class="hidden md:flex items-center gap-3">
+                <div class="text-right">
+                    <p class="text-[9px] uppercase tracking-widest text-slate-400 font-bold">
+                        ANNUAIRE
+                    </p>
+                    <p class="text-xs font-semibold text-secondary">
+                        Agents de l'État
+                    </p>
+                </div>
+
+                <div class="w-10 h-10 rounded-xl bg-ministry/10 flex items-center justify-center">
+                    <i data-lucide="contact-round" class="w-5 h-5 text-ministry"></i>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</header>
+
+<!-- =========================================================
+     HERO
+========================================================= -->
+<section class="hero relative overflow-hidden">
+
+    <!-- Décorations -->
+    <div class="absolute -right-20 -top-24 w-64 h-64 rounded-full border border-white/10"></div>
+    <div class="absolute right-10 -top-10 w-32 h-32 rounded-full border border-white/10"></div>
+    <div class="absolute -left-20 -bottom-24 w-60 h-60 rounded-full bg-white/5"></div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="py-7 sm:py-9">
+
+            <!-- Badge -->
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/15 text-white text-[10px] sm:text-xs font-semibold mb-3">
+                <i data-lucide="shield-check" class="w-3.5 h-3.5 text-yellow"></i>
+                Fiche de contact officielle
+            </div>
+
+            <!-- Titre -->
+            <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white">
+                Annuaire des agents <span class="text-yellow">de l'État</span>
+            </h2>
+
+            <p class="mt-2 max-w-2xl text-xs sm:text-sm leading-relaxed text-white/70">
+                Consultez les informations professionnelles et les coordonnées vérifiées des agents du Ministère de la Fonction Publique et de la Réforme du Service Public.
+            </p>
+
+        </div>
+    </div>
+</section>
+
+<!-- =========================================================
+     CONTENU PRINCIPAL
+========================================================= -->
+<main class="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+
+    <!-- =====================================================
+         FICHE AGENT
+    ===================================================== -->
+    <section class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+
+        <!-- Bande supérieure -->
+        <div class="h-1 bg-gradient-to-r from-ministry via-green to-yellow"></div>
+
+        <div class="p-5 sm:p-7 lg:p-8">
+
+            <!-- =================================================
+                 PROFIL
+            ================================================= -->
+            <div class="grid grid-cols-1 lg:grid-cols-[auto_1fr_auto] gap-6 lg:gap-8 items-center">
+
+                <!-- PHOTO -->
+                <div class="flex justify-center lg:justify-start">
+                    <div class="relative">
+                        <div class="photo-wrapper w-32 h-32 sm:w-36 sm:h-36 rounded-[28px] p-1">
+                            <div class="w-full h-full rounded-[24px] overflow-hidden bg-white shadow-inner">
                                 <img
                                     src="{{ $agent->photo_url }}"
-                                    alt="{{ $agent->nom_complet }}"
+                                    alt="Photo de {{ $agent->nom_complet }}"
                                     class="w-full h-full object-cover"
-                                    style="display: block; image-rendering: -webkit-optimize-contrast; image-rendering: high-quality; -ms-interpolation-mode: bicubic;"
                                 >
                             </div>
                         </div>
-                    </div>
-                    <!-- Badge vérification -->
-                    <span class="absolute bottom-1 right-1 text-white rounded-full p-1.5 shadow-md border-2 border-white" style="background-color: #052e16;">
-                        <i class="fa-solid fa-check text-xs"></i>
-                    </span>
-                </div>
 
-                <!-- Matricule — plaque premium alignée en bas à droite de la photo -->
-                <div class="flex-shrink-0 ml-3">
-                    <div class="rounded-xl overflow-hidden shadow-lg" style="border: 1.5px solid #d97706;">
-                        <!-- Label -->
-                        <div class="px-4 py-1.5 flex items-center gap-2" style="background-color: #052e16;">
-                            <i class="fa-solid fa-id-badge text-amber-400" style="font-size: 10px;"></i>
-                            <span style="font-size: 9px; letter-spacing: 0.14em; color: #fcd34d;" class="font-bold uppercase">Matricule de Solde</span>
-                        </div>
-                        <!-- Numéro -->
-                        <div class="px-4 py-2 flex items-center justify-center" style="background: linear-gradient(135deg, #f9f5eb 0%, #fef9ee 100%);">
-                            <span class="font-mono font-black tracking-widest" style="font-size: clamp(1rem, 4vw, 1.35rem); color: #052e16; letter-spacing: 0.12em;">
-                                {{ $agent->matricule }}
+                        <!-- Statut -->
+                        <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white border border-slate-200 shadow-md rounded-full px-3 py-1 flex items-center gap-1.5 whitespace-nowrap">
+                            <span class="w-2 h-2 rounded-full bg-green"></span>
+                            <span class="text-[9px] font-extrabold text-slate-600">
+                                AGENT ACTIF
                             </span>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Ligne décorative dorée sous la section photo/matricule -->
-            <div class="mt-4 mb-4 h-px w-full" style="background: linear-gradient(90deg, #d97706 0%, #fbbf24 40%, transparent 100%); opacity: 0.35;"></div>
+                <!-- IDENTITE -->
+                <div class="text-center lg:text-left min-w-0">
 
-            <!-- Identity Header -->
-            <div class="border-b border-slate-200 pb-5 mb-5">
-                <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-tight">
-                    {{ $agent->prenom }}
-                </h1>
-                <h2 class="text-xl sm:text-2xl font-black text-emerald-700 tracking-wider uppercase">
-                    {{ $agent->nom }}
-                </h2>
-                
-                @if ($agent->fonction)
-                    <div class="mt-3 flex items-center text-slate-700 font-semibold text-sm sm:text-base">
-                        <span class="p-1.5 rounded-lg bg-orange-100 text-orange-600 mr-2.5">
-                            <i class="fa-solid fa-briefcase text-xs"></i>
+                    <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-ministry/10 text-ministry text-[9px] sm:text-[10px] uppercase tracking-wider font-extrabold">
+                        <i data-lucide="badge-check" class="w-3.5 h-3.5"></i>
+                        Agent de l'État
+                    </div>
+
+                    <h3 class="mt-3 text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+                        {{ $agent->nom_complet }}
+                    </h3>
+
+                    <!-- Matricule -->
+                    <div class="mt-2 flex flex-wrap justify-center lg:justify-start items-center gap-2">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-xs font-semibold text-secondary">
+                            <i data-lucide="id-card" class="w-3.5 h-3.5"></i>
+                            Matricule : {{ $agent->matricule }}
                         </span>
-                        <span>{{ $agent->fonction }}</span>
                     </div>
-                @endif
-            </div>
 
-            <!-- Agent Details Grid -->
-            <div class="space-y-3.5 text-sm">
-                
-                <!-- Structure d'affectation -->
-                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200/80 flex items-start space-x-3.5">
-                    <div class="p-2.5 bg-emerald-100 rounded-xl text-emerald-700 mt-0.5 shadow-xs">
-                        <i class="fa-solid fa-building-columns"></i>
-                    </div>
-                    <div>
-                        <span class="text-xs font-bold text-slate-500 block">Structure d'affectation</span>
-                        <span class="text-slate-900 font-extrabold text-sm">{{ $agent->structure_affectation ?? 'Non renseignée' }}</span>
-                    </div>
-                </div>
+                    <!-- Fonction (Corps de métier) -->
+                    @if($agent->fonction)
+                        <p class="mt-3 text-sm font-semibold text-secondary">
+                            {{ $agent->fonction }}
+                        </p>
+                    @endif
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <!-- Date Integration FP -->
-                    <div class="bg-slate-50 rounded-2xl p-3.5 border border-slate-200/80 flex items-center space-x-3">
-                        <div class="p-2.5 bg-amber-100 rounded-xl text-amber-700 shadow-xs">
-                            <i class="fa-solid fa-calendar-check"></i>
-                        </div>
-                        <div>
-                            <span class="text-xs font-bold text-slate-500 block">Intégration FP</span>
-                            <span class="text-slate-900 font-bold text-xs">
-                                {{ $agent->date_integration_fp ? $agent->date_integration_fp->format('d/m/Y') : 'N/A' }}
+                    <!-- Poste (Titre / Responsabilité) -->
+                    @if($agent->poste)
+                        <div class="mt-2 inline-flex items-center gap-2 max-w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200">
+                            <i data-lucide="layers-3" class="w-4 h-4 text-ministry shrink-0"></i>
+                            <span class="text-xs sm:text-sm font-bold text-slate-700">
+                                {{ $agent->poste }}
                             </span>
                         </div>
-                    </div>
+                    @endif
 
-                    <!-- Téléphone -->
-                    <div class="bg-slate-50 rounded-2xl p-3.5 border border-slate-200/80 flex items-center space-x-3">
-                        <div class="p-2.5 rounded-xl text-white shadow-xs flex-shrink-0" style="background-color: #052e16;">
-                            <i class="fa-solid fa-phone-volume"></i>
+                </div>
+
+                <!-- ACTIONS PRINCIPALES -->
+                <div class="grid grid-cols-3 lg:grid-cols-1 gap-2 w-full lg:w-44">
+
+                    <!-- Enregistrer Contact (vCard) -->
+                    <a
+                        href="{{ route('agent.vcard', $agent->uuid) }}"
+                        class="group flex items-center justify-center gap-2 rounded-xl bg-ministry px-3 py-3 text-white text-xs font-bold shadow-md shadow-ministry/20 hover:bg-ministryDark transition"
+                    >
+                        <i data-lucide="user-plus" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline lg:inline">Enregistrer</span>
+                    </a>
+
+                    <!-- Message modal -->
+                    <button
+                        onclick="openMessage()"
+                        class="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 text-secondary text-xs font-bold hover:bg-slate-50 transition"
+                    >
+                        <i data-lucide="message-square" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline lg:inline">Message</span>
+                    </button>
+
+                    <!-- Partager -->
+                    <button
+                        onclick="shareContact()"
+                        class="flex items-center justify-center gap-2 rounded-xl border border-ministry/20 bg-ministry/5 px-3 py-3 text-ministry text-xs font-bold hover:bg-ministry/10 transition"
+                    >
+                        <i data-lucide="share-2" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline lg:inline">Partager</span>
+                    </button>
+
+                </div>
+
+            </div>
+
+            <!-- =================================================
+                 SEPARATEUR
+            ================================================= -->
+            <div class="my-8 border-t border-slate-100"></div>
+
+            <!-- =================================================
+                 TITRE INFORMATIONS
+            ================================================= -->
+            <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-5">
+                <div>
+                    <p class="text-[10px] uppercase tracking-[.16em] font-extrabold text-ministry">
+                        Profil professionnel
+                    </p>
+                    <h4 class="mt-1 text-xl font-extrabold text-slate-900">
+                        Coordonnées et affectation
+                    </h4>
+                </div>
+
+                <span class="text-[10px] text-slate-400">
+                    Informations professionnelles
+                </span>
+            </div>
+
+            <!-- =================================================
+                 INFORMATIONS GRID
+            ================================================= -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+                <!-- DEPARTEMENT / SERVICE -->
+                <div class="info-card rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
+                    <div class="flex gap-3">
+                        <div class="w-11 h-11 rounded-xl bg-ministry/10 flex items-center justify-center shrink-0">
+                            <i data-lucide="building-2" class="w-5 h-5 text-ministry"></i>
                         </div>
                         <div class="min-w-0">
-                            <span class="text-xs font-bold text-slate-500 block mb-0.5">Téléphone</span>
-                            @if ($agent->telephone)
-                                <a href="tel:{{ $agent->telephone }}"
-                                   class="font-extrabold underline underline-offset-2 decoration-2 block truncate"
-                                   style="color: #052e16; font-size: 0.85rem; text-decoration-color: #d97706;">
-                                    {{ $agent->telephone }}
-                                </a>
-                                <span class="text-[10px] text-slate-400 font-medium flex items-center gap-1 mt-0.5">
-                                    <i class="fa-solid fa-hand-pointer text-[9px]"></i>
-                                    Appuyer pour appeler ou enregistrer
-                                </span>
-                            @else
-                                <span class="text-slate-400 font-medium text-xs">N/A</span>
-                            @endif
+                            <p class="text-[9px] uppercase tracking-wider font-bold text-slate-400">
+                                Direction / Service
+                            </p>
+                            <p class="mt-1 text-sm font-bold leading-relaxed text-slate-800">
+                                {{ $agent->service ?? ($agent->structure_affectation ?? 'Non renseigné') }}
+                            </p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Email -->
-                @if ($agent->email)
-                    <div class="bg-slate-50 rounded-2xl p-3.5 border border-slate-200/80 flex items-center space-x-3">
-                        <div class="p-2.5 bg-orange-100 rounded-xl text-orange-600 shadow-xs">
-                            <i class="fa-solid fa-envelope"></i>
+                <!-- FONCTION -->
+                <div class="info-card rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
+                    <div class="flex gap-3">
+                        <div class="w-11 h-11 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
+                            <i data-lucide="briefcase-business" class="w-5 h-5 text-secondary"></i>
                         </div>
-                        <div class="truncate">
-                            <span class="text-xs font-bold text-slate-500 block">Email Professionnel</span>
-                            <a href="mailto:{{ $agent->email }}" class="text-orange-600 hover:underline font-extrabold text-xs truncate block">
-                                {{ $agent->email }}
-                            </a>
+                        <div class="min-w-0">
+                            <p class="text-[9px] uppercase tracking-wider font-bold text-slate-400">
+                                Fonction (Métier)
+                            </p>
+                            <p class="mt-1 text-sm font-bold leading-relaxed text-slate-800">
+                                {{ $agent->fonction ?? 'Non renseigné' }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- POSTE -->
+                <div class="info-card rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
+                    <div class="flex gap-3">
+                        <div class="w-11 h-11 rounded-xl bg-yellow/20 flex items-center justify-center shrink-0">
+                            <i data-lucide="layers-3" class="w-5 h-5 text-yellow-700"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-[9px] uppercase tracking-wider font-bold text-slate-400">
+                                Poste
+                            </p>
+                            <p class="mt-1 text-sm font-bold leading-relaxed text-slate-800">
+                                {{ $agent->poste ?? 'Non renseigné' }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TELEPHONE -->
+                @if($agent->telephone)
+                    <a
+                        href="tel:{{ $agent->telephone }}"
+                        class="info-card block rounded-2xl border border-slate-200 bg-white p-4 hover:border-green/40"
+                    >
+                        <div class="flex gap-3">
+                            <div class="w-11 h-11 rounded-xl bg-green/10 flex items-center justify-center shrink-0">
+                                <i data-lucide="phone" class="w-5 h-5 text-green"></i>
+                            </div>
+                            <div>
+                                <p class="text-[9px] uppercase tracking-wider font-bold text-slate-400">
+                                    Téléphone
+                                </p>
+                                <p class="mt-1 text-sm font-bold text-slate-800">
+                                    {{ $agent->telephone }}
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+                @else
+                    <div class="info-card rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
+                        <div class="flex gap-3">
+                            <div class="w-11 h-11 rounded-xl bg-slate-200 flex items-center justify-center shrink-0">
+                                <i data-lucide="phone" class="w-5 h-5 text-slate-400"></i>
+                            </div>
+                            <div>
+                                <p class="text-[9px] uppercase tracking-wider font-bold text-slate-400">
+                                    Téléphone
+                                </p>
+                                <p class="mt-1 text-sm font-bold text-slate-400">
+                                    Non renseigné
+                                </p>
+                            </div>
                         </div>
                     </div>
                 @endif
 
-            </div>
+                <!-- EMAIL -->
+                @if($agent->email)
+                    <a
+                        href="mailto:{{ $agent->email }}"
+                        class="info-card block rounded-2xl border border-slate-200 bg-white p-4 hover:border-secondary/40"
+                    >
+                        <div class="flex gap-3">
+                            <div class="w-11 h-11 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
+                                <i data-lucide="mail" class="w-5 h-5 text-secondary"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-[9px] uppercase tracking-wider font-bold text-slate-400">
+                                    Email professionnel
+                                </p>
+                                <p class="mt-1 text-sm font-bold text-slate-800 break-all">
+                                    {{ $agent->email }}
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+                @else
+                    <div class="info-card rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
+                        <div class="flex gap-3">
+                            <div class="w-11 h-11 rounded-xl bg-slate-200 flex items-center justify-center shrink-0">
+                                <i data-lucide="mail" class="w-5 h-5 text-slate-400"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-[9px] uppercase tracking-wider font-bold text-slate-400">
+                                    Email professionnel
+                                </p>
+                                <p class="mt-1 text-sm font-bold text-slate-400">
+                                    Non renseigné
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                @endif
 
-            <!-- QR Code Section -->
-            <div class="mt-6 pt-5 border-t border-slate-200 flex flex-col items-center justify-center text-center">
-                <div class="p-3.5 bg-white rounded-2xl shadow-md border-2 border-emerald-500/30 mb-2">
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data={{ urlencode($agent->public_url) }}&color=064e3b" alt="QR Code {{ $agent->matricule }}" class="w-32 h-32">
+                <!-- ADMINISTRATION / MINISTERE -->
+                <div class="info-card rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
+                    <div class="flex gap-3">
+                        <div class="w-11 h-11 rounded-xl bg-yellow/20 flex items-center justify-center shrink-0">
+                            <i data-lucide="landmark" class="w-5 h-5 text-yellow-700"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-[9px] uppercase tracking-wider font-bold text-slate-400">
+                                Structure / Ministère
+                            </p>
+                            <p class="mt-1 text-sm font-bold text-slate-800">
+                                {{ $agent->structure_affectation ?? 'Ministère de la Fonction Publique' }}
+                            </p>
+                        </div>
+                    </div>
                 </div>
-                <p class="text-[11px] font-semibold text-slate-500">Scannez ce QR Code pour vérifier l'authenticité de cette fiche</p>
+
             </div>
 
-            <!-- Actions rapides -->
-            <div class="mt-6 no-print">
-                <a href="{{ route('agent.vcard', $agent->uuid) }}"
-                    class="w-full py-3.5 px-6 rounded-2xl font-extrabold text-sm sm:text-base transition-all duration-200 flex items-center justify-center gap-3 shadow-lg active:scale-98 text-white hover:brightness-110"
-                    style="background: linear-gradient(135deg, #052e16 0%, #064e3b 100%); border: 1.5px solid #d97706;">
-                    <i class="fa-solid fa-user-plus text-amber-400 text-lg"></i>
-                    <span class="tracking-wide">Enregistrer le contact</span>
-                </a>
+            <!-- =================================================
+                 QR CODE & DATE INTEGRATION
+            ================================================= -->
+            <div class="mt-6 pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/60 p-5 rounded-2xl border border-slate-200/70">
+                <div class="flex items-center gap-4">
+                    <div class="w-16 h-16 rounded-xl bg-white p-1.5 shadow-sm border border-slate-200 flex-shrink-0">
+                        <img
+                            src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ urlencode($agent->public_url) }}&color=00843F"
+                            alt="QR Code {{ $agent->matricule }}"
+                            class="w-full h-full"
+                        >
+                    </div>
+                    <div>
+                        <span class="text-xs font-bold text-slate-900 block">Fiche certifiée et authentifiée</span>
+                        <p class="text-[11px] text-slate-500">Scannez pour vérifier ou partager l'authenticité de cette carte.</p>
+                    </div>
+                </div>
+
+                @if($agent->date_integration_fp)
+                    <div class="text-left sm:text-right">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Intégration FP</span>
+                        <span class="text-xs font-extrabold text-slate-800">{{ $agent->date_integration_fp->format('d/m/Y') }}</span>
+                    </div>
+                @endif
+            </div>
+
+            <!-- =================================================
+                 SERVICES RAPIDES
+            ================================================= -->
+            <div class="mt-9 pt-8 border-t border-slate-100">
+
+                <div class="mb-5">
+                    <p class="text-[10px] uppercase tracking-[.16em] font-extrabold text-ministry">
+                        Actions rapides
+                    </p>
+                    <h4 class="mt-1 text-xl font-extrabold text-slate-900">
+                        Contacter cet agent
+                    </h4>
+                    <p class="mt-1 text-xs sm:text-sm text-slate-500">
+                        Utilisez l'une des options ci-dessous pour contacter ou enregistrer la fiche de l'agent.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+
+                    <!-- APPELER -->
+                    @if($agent->telephone)
+                        <a
+                            href="tel:{{ $agent->telephone }}"
+                            class="quick-card group rounded-2xl border border-slate-200 bg-white p-4 hover:border-ministry hover:shadow-lg hover:shadow-ministry/10"
+                        >
+                            <div class="flex items-center justify-between">
+                                <div class="w-11 h-11 rounded-xl bg-ministry/10 flex items-center justify-center group-hover:bg-ministry transition">
+                                    <i data-lucide="phone-call" class="w-5 h-5 text-ministry group-hover:text-white"></i>
+                                </div>
+                                <i data-lucide="arrow-up-right" class="w-4 h-4 text-slate-300 group-hover:text-ministry"></i>
+                            </div>
+                            <p class="mt-4 text-sm font-extrabold text-slate-800 group-hover:text-ministry">
+                                Appeler
+                            </p>
+                            <p class="mt-1 text-[10px] leading-relaxed text-slate-500">
+                                {{ $agent->telephone }}
+                            </p>
+                        </a>
+                    @else
+                        <div class="quick-card opacity-60 rounded-2xl border border-slate-200 bg-white p-4">
+                            <div class="flex items-center justify-between">
+                                <div class="w-11 h-11 rounded-xl bg-slate-100 flex items-center justify-center">
+                                    <i data-lucide="phone-off" class="w-5 h-5 text-slate-400"></i>
+                                </div>
+                            </div>
+                            <p class="mt-4 text-sm font-bold text-slate-500">Appeler</p>
+                            <p class="mt-1 text-[10px] text-slate-400">Numéro non disponible</p>
+                        </div>
+                    @endif
+
+                    <!-- EMAIL -->
+                    @if($agent->email)
+                        <a
+                            href="mailto:{{ $agent->email }}"
+                            class="quick-card group rounded-2xl border border-slate-200 bg-white p-4 hover:border-secondary hover:shadow-lg"
+                        >
+                            <div class="flex items-center justify-between">
+                                <div class="w-11 h-11 rounded-xl bg-secondary/10 flex items-center justify-center group-hover:bg-secondary transition">
+                                    <i data-lucide="mail" class="w-5 h-5 text-secondary group-hover:text-white"></i>
+                                </div>
+                                <i data-lucide="arrow-up-right" class="w-4 h-4 text-slate-300 group-hover:text-secondary"></i>
+                            </div>
+                            <p class="mt-4 text-sm font-extrabold text-slate-800 group-hover:text-secondary">
+                                Envoyer un email
+                            </p>
+                            <p class="mt-1 text-[10px] leading-relaxed text-slate-500 truncate">
+                                {{ $agent->email }}
+                            </p>
+                        </a>
+                    @else
+                        <div class="quick-card opacity-60 rounded-2xl border border-slate-200 bg-white p-4">
+                            <div class="flex items-center justify-between">
+                                <div class="w-11 h-11 rounded-xl bg-slate-100 flex items-center justify-center">
+                                    <i data-lucide="mail" class="w-5 h-5 text-slate-400"></i>
+                                </div>
+                            </div>
+                            <p class="mt-4 text-sm font-bold text-slate-500">Envoyer un email</p>
+                            <p class="mt-1 text-[10px] text-slate-400">Email non disponible</p>
+                        </div>
+                    @endif
+
+                    <!-- ENREGISTRER (VCARD) -->
+                    <a
+                        href="{{ route('agent.vcard', $agent->uuid) }}"
+                        class="quick-card group text-left rounded-2xl border border-slate-200 bg-white p-4 hover:border-yellow hover:shadow-lg block"
+                    >
+                        <div class="flex items-center justify-between">
+                            <div class="w-11 h-11 rounded-xl bg-yellow/20 flex items-center justify-center group-hover:bg-yellow transition">
+                                <i data-lucide="contact" class="w-5 h-5 text-yellow-700"></i>
+                            </div>
+                            <i data-lucide="download" class="w-4 h-4 text-slate-300 group-hover:text-yellow-700"></i>
+                        </div>
+                        <p class="mt-4 text-sm font-extrabold text-slate-800 group-hover:text-yellow-700">
+                            Enregistrer
+                        </p>
+                        <p class="mt-1 text-[10px] leading-relaxed text-slate-500">
+                            Ajouter aux contacts (.vcf)
+                        </p>
+                    </a>
+
+                    <!-- PARTAGER -->
+                    <button
+                        onclick="shareContact()"
+                        class="quick-card group text-left rounded-2xl border border-slate-200 bg-white p-4 hover:border-ministry hover:shadow-lg hover:shadow-ministry/10"
+                    >
+                        <div class="flex items-center justify-between">
+                            <div class="w-11 h-11 rounded-xl bg-ministry/10 flex items-center justify-center group-hover:bg-ministry transition">
+                                <i data-lucide="share-2" class="w-5 h-5 text-ministry group-hover:text-white"></i>
+                            </div>
+                            <i data-lucide="arrow-up-right" class="w-4 h-4 text-slate-300 group-hover:text-ministry"></i>
+                        </div>
+                        <p class="mt-4 text-sm font-extrabold text-slate-800 group-hover:text-ministry">
+                            Partager
+                        </p>
+                        <p class="mt-1 text-[10px] leading-relaxed text-slate-500">
+                            Partager cette fiche
+                        </p>
+                    </button>
+
+                </div>
+
             </div>
 
         </div>
 
-        <!-- Footer Seal -->
-        <div class="bg-slate-50 px-6 py-3 border-t border-slate-200 flex justify-between items-center text-[10px] text-slate-500">
-            <span>ID: <code class="font-mono text-slate-700 font-bold">{{ substr($agent->uuid, 0, 8) }}...</code></span>
-            <span class="flex items-center gap-1.5 font-semibold text-emerald-700"><i class="fa-solid fa-lock"></i> Système Sécurisé Officiel</span>
+    </section>
+
+</main>
+
+<!-- =========================================================
+     FOOTER
+========================================================= -->
+<footer class="bg-white border-t border-slate-200 mt-12">
+
+    <div class="h-1 flex">
+        <div class="flex-1 bg-ministry"></div>
+        <div class="w-16 bg-yellow"></div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-5">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-ministry/10 flex items-center justify-center">
+                    <i data-lucide="landmark" class="w-4 h-4 text-ministry"></i>
+                </div>
+                <div>
+                    <p class="text-xs font-bold text-slate-800">
+                        Ministère de la Fonction Publique
+                    </p>
+                    <p class="text-[10px] text-slate-400">
+                        et de la Réforme du Service Public
+                    </p>
+                </div>
+            </div>
+
+            <div class="text-center sm:text-right">
+                <p class="text-[10px] text-slate-400">
+                    République du Sénégal
+                </p>
+                <p class="mt-0.5 text-[10px] text-slate-400">
+                    © {{ date('Y') }} — Tous droits réservés
+                </p>
+            </div>
+
+        </div>
+    </div>
+</footer>
+
+<!-- =========================================================
+     MODAL MESSAGE
+========================================================= -->
+<div
+    id="messageModal"
+    class="hidden fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4"
+>
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
+
+        <!-- ENTETE MODAL -->
+        <div class="hero relative px-6 py-6">
+            <button
+                onclick="closeMessage()"
+                class="absolute right-4 top-4 w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center"
+            >
+                <i data-lucide="x" class="w-4 h-4 text-white"></i>
+            </button>
+
+            <div class="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center">
+                <i data-lucide="message-circle" class="w-5 h-5 text-white"></i>
+            </div>
+
+            <p class="mt-4 text-[9px] uppercase tracking-widest font-bold text-white/60">
+                Contact
+            </p>
+
+            <h3 class="mt-1 text-xl font-extrabold text-white">
+                Envoyer un message
+            </h3>
+
+            <p class="mt-1 text-xs text-white/70">
+                À {{ $agent->nom_complet }}
+            </p>
+        </div>
+
+        <!-- FORMULAIRE -->
+        <div class="p-6">
+            <label class="block mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">
+                Votre message
+            </label>
+
+            <textarea
+                id="messageText"
+                rows="5"
+                placeholder="Saisissez votre message..."
+                class="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm outline-none focus:bg-white focus:border-ministry focus:ring-4 focus:ring-ministry/10 transition"
+            ></textarea>
+
+            <button
+                onclick="sendMessage()"
+                class="mt-4 w-full py-3.5 rounded-xl bg-ministry hover:bg-ministryDark text-white font-bold flex items-center justify-center gap-2 transition shadow-lg shadow-ministry/20"
+            >
+                <i data-lucide="send" class="w-4 h-4"></i>
+                Envoyer le message
+            </button>
         </div>
 
     </div>
+</div>
 
-    <!-- Footer -->
-    <div class="mt-6 text-center text-xs text-slate-500 no-print">
-        <p>&copy; {{ date('Y') }} MFPTRSP/DSI. Document numérique officiel.</p>
-    </div>
+<!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
+<script>
+    lucide.createIcons();
+
+    /* ============================
+       PARTAGER
+    ============================ */
+    async function shareContact() {
+        const shareData = {
+            title: "{{ addslashes($agent->nom_complet) }}",
+            text: "Fiche de contact de {{ addslashes($agent->nom_complet) }} (Matricule: {{ $agent->matricule }}) - Ministère de la Fonction Publique",
+            url: window.location.href
+        };
+
+        if (navigator.share) {
+            try {
+                await navigator.share(shareData);
+            } catch (error) {
+                if (error.name !== "AbortError") {
+                    console.error(error);
+                }
+            }
+            return;
+        }
+
+        try {
+            await navigator.clipboard.writeText(window.location.href);
+            showToast("Lien de la fiche copié !");
+        } catch (error) {
+            prompt("Copiez le lien de cette fiche :", window.location.href);
+        }
+    }
+
+    /* ============================
+       MODAL
+    ============================ */
+    function openMessage() {
+        const modal = document.getElementById("messageModal");
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+        document.body.style.overflow = "hidden";
+        lucide.createIcons();
+    }
+
+    function closeMessage() {
+        const modal = document.getElementById("messageModal");
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+        document.body.style.overflow = "";
+    }
+
+    /* ============================
+       ENVOYER MESSAGE
+    ============================ */
+    function sendMessage() {
+        const input = document.getElementById("messageText");
+        const message = input.value.trim();
+
+        if (!message) {
+            showToast("Veuillez saisir votre message.");
+            return;
+        }
+
+        @if($agent->email)
+            window.location.href = "mailto:{{ $agent->email }}?subject=" + encodeURIComponent("Message concernant la fiche agent {{ $agent->matricule }}") + "&body=" + encodeURIComponent(message);
+        @else
+            showToast("Message préparé avec succès !");
+        @endif
+
+        input.value = "";
+        closeMessage();
+    }
+
+    /* ============================
+       TOAST
+    ============================ */
+    function showToast(message) {
+        const oldToast = document.getElementById("toast");
+        if (oldToast) {
+            oldToast.remove();
+        }
+
+        const toast = document.createElement("div");
+        toast.id = "toast";
+        toast.className =
+            "fixed bottom-5 left-1/2 -translate-x-1/2 z-[200] " +
+            "bg-slate-900 text-white px-5 py-3 rounded-xl " +
+            "shadow-xl text-xs sm:text-sm font-semibold " +
+            "flex items-center gap-2";
+
+        toast.innerHTML = `
+            <span class="w-2 h-2 rounded-full bg-green"></span>
+            <span>${message}</span>
+        `;
+
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.opacity = "0";
+            toast.style.transition = "opacity .3s";
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }, 2500);
+    }
+
+    /* ============================
+       EVENEMENTS MODAL
+    ============================ */
+    document.getElementById("messageModal").addEventListener("click", function(event) {
+        if (event.target === this) {
+            closeMessage();
+        }
+    });
+
+    document.addEventListener("keydown", function(event) {
+        if (event.key === "Escape") {
+            closeMessage();
+        }
+    });
+</script>
 
 </body>
 </html>

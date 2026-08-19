@@ -246,13 +246,23 @@
                     </div>
 
                     <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                        <span class="font-bold text-slate-800 block">fonction</span>
-                        <span class="text-[11px] text-slate-500">Poste ou titre (ex: <code>Chef de Service</code>)</span>
+                        <span class="font-bold text-slate-800 block">structure_affectation</span>
+                        <span class="text-[11px] text-slate-500">Ministère / Grande Institution (ex: <code>Ministère de la Fonction Publique</code>)</span>
                     </div>
 
                     <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                        <span class="font-bold text-slate-800 block">structure_affectation</span>
-                        <span class="text-[11px] text-slate-500">Ministère / Direction (ex: <code>DSI</code>)</span>
+                        <span class="font-bold text-slate-800 block">service</span>
+                        <span class="text-[11px] text-slate-500">Direction / Service de rattachement (ex: <code>Direction des Systèmes d'Information</code>)</span>
+                    </div>
+
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                        <span class="font-bold text-slate-800 block">fonction</span>
+                        <span class="text-[11px] text-slate-500">Corps de métier / Profession (ex: <code>Analyste Programmeur</code>, <code>Gestionnaire RH</code>)</span>
+                    </div>
+
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                        <span class="font-bold text-slate-800 block">poste</span>
+                        <span class="text-[11px] text-slate-500">Titre / Responsabilité (ex: <code>Directeur</code>, <code>Chef de Service</code>, <code>Inspecteur</code>)</span>
                     </div>
 
                     <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">

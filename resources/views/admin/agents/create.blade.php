@@ -75,20 +75,32 @@
                 </h3>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <!-- Structure -->
+                    <!-- Structure (Ministère) -->
                     <div>
-                        <label class="block text-xs font-bold text-slate-800 mb-1">Structure d'affectation</label>
-                        <input type="text" name="structure_affectation" value="{{ old('structure_affectation') }}" placeholder="Direction / Service / Ministère" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20">
+                        <label class="block text-xs font-bold text-slate-800 mb-1">Structure / Ministère</label>
+                        <input type="text" name="structure_affectation" value="{{ old('structure_affectation') }}" placeholder="ex: Ministère de la Fonction Publique" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20">
                     </div>
 
-                    <!-- Fonction -->
+                    <!-- Service / Direction -->
                     <div>
-                        <label class="block text-xs font-bold text-slate-800 mb-1">Fonction / Intitulé de poste</label>
-                        <input type="text" name="fonction" value="{{ old('fonction') }}" placeholder="ex: Analyste Développeur" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20">
+                        <label class="block text-xs font-bold text-slate-800 mb-1">Service / Direction</label>
+                        <input type="text" name="service" value="{{ old('service') }}" placeholder="ex: Direction des Systèmes d'Information" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20">
+                    </div>
+
+                    <!-- Fonction (Profession / Corps de métier) -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-800 mb-1">Fonction (Corps de métier)</label>
+                        <input type="text" name="fonction" value="{{ old('fonction') }}" placeholder="ex: Analyste Programmeur, Gestionnaire RH" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20">
+                    </div>
+
+                    <!-- Poste (Responsabilité / Titre) -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-800 mb-1">Poste (Titre / Responsabilité)</label>
+                        <input type="text" name="poste" value="{{ old('poste') }}" placeholder="ex: Directeur, Chef de Service, Inspecteur" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20">
                     </div>
 
                     <!-- Date d'intégration FP -->
-                    <div>
+                    <div class="sm:col-span-2">
                         <label class="block text-xs font-bold text-slate-800 mb-1">Date d'intégration à la FP</label>
                         <input type="date" name="date_integration_fp" value="{{ old('date_integration_fp') }}" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20">
                     </div>

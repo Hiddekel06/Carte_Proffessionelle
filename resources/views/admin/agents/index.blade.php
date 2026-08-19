@@ -73,8 +73,8 @@
                     <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
                         <th class="py-4 px-5">Agent</th>
                         <th class="py-4 px-4">Matricule</th>
-                        <th class="py-4 px-4">Fonction</th>
-                        <th class="py-4 px-4">Structure</th>
+                        <th class="py-4 px-4">Poste / Fonction</th>
+                        <th class="py-4 px-4">Ministère / Service</th>
                         <th class="py-4 px-4">Intégration FP</th>
                         <th class="py-4 px-4">Contact</th>
                         <th class="py-4 px-5 text-right">Actions</th>
@@ -90,7 +90,7 @@
                                     <img src="{{ $agent->photo_url }}" alt="{{ $agent->nom_complet }}" class="w-10 h-10 rounded-xl object-cover border border-emerald-500/30 bg-slate-100">
                                     <div>
                                         <div class="font-extrabold text-slate-900 text-sm group-hover:text-emerald-700 transition-colors">
-                                            {{ $agent->nom_complet }}
+                                             {{ $agent->nom_complet }}
                                         </div>
                                         <span class="text-[11px] text-slate-400 font-medium">ID: {{ substr($agent->uuid, 0, 8) }}</span>
                                     </div>
@@ -104,14 +104,22 @@
                                 </span>
                             </td>
 
-                            <!-- Fonction -->
-                            <td class="py-3.5 px-4 font-semibold text-slate-800">
-                                {{ $agent->fonction ?? '—' }}
+                            <!-- Poste & Fonction -->
+                            <td class="py-3.5 px-4">
+                                @if($agent->poste)
+                                    <span class="font-extrabold text-emerald-800 block text-xs">{{ $agent->poste }}</span>
+                                @endif
+                                <span class="text-[11px] text-slate-600 font-medium">{{ $agent->fonction ?? ($agent->poste ? '' : '—') }}</span>
                             </td>
 
-                            <!-- Structure -->
-                            <td class="py-3.5 px-4 font-medium text-slate-600">
-                                {{ $agent->structure_affectation ?? '—' }}
+                            <!-- Ministère & Service -->
+                            <td class="py-3.5 px-4">
+                                <span class="font-bold text-slate-800 block text-xs">{{ $agent->structure_affectation ?? '—' }}</span>
+                                @if($agent->service)
+                                    <span class="text-[11px] text-emerald-700 font-semibold flex items-center gap-1">
+                                        <i class="fa-solid fa-turn-up fa-rotate-90 text-[9px] text-slate-400"></i> {{ $agent->service }}
+                                    </span>
+                                @endif
                             </td>
 
                             <!-- Date Intégration FP -->

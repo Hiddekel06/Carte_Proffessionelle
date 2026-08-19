@@ -41,10 +41,15 @@ class PublicAgentController extends Controller
             $lines[] = "EMAIL;TYPE=WORK:{$agent->email}";
         }
         if ($agent->structure_affectation) {
-            $lines[] = "ORG:{$agent->structure_affectation}";
+            $org = $agent->structure_affectation;
+            if ($agent->service) {
+                $org .= ';' . $agent->service;
+            }
+            $lines[] = "ORG:{$org}";
         }
-        if ($agent->fonction) {
-            $lines[] = "TITLE:{$agent->fonction}";
+        if ($agent->poste || $agent->fonction) {
+            $title = $agent->poste ? ($agent->fonction ? "{$agent->poste} - {$agent->fonction}" : $agent->poste) : $agent->fonction;
+            $lines[] = "TITLE:{$title}";
         }
 
         $lines[] = "NOTE:Matricule: {$agent->matricule}";
