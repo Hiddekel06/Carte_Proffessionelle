@@ -107,6 +107,14 @@
                 );
         }
 
+        .agent-photo-img {
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: high-quality;
+            image-rendering: crisp-edges;
+            backface-visibility: hidden;
+            transform: translateZ(0);
+        }
+
         /* =========================
            MOBILE
         ========================= */
@@ -126,10 +134,11 @@
 ========================================================= -->
 <header class="bg-white border-b border-slate-100">
 
-    <!-- Bande institutionnelle -->
-    <div class="h-1 flex">
-        <div class="flex-1 bg-ministry"></div>
-        <div class="w-16 bg-yellow"></div>
+    <!-- Bande institutionnelle fine et subtile (Vert, Jaune, Rouge) -->
+    <div class="h-[2px] flex opacity-75">
+        <div class="flex-1 bg-[#00853f]"></div>
+        <div class="flex-1 bg-[#fcd116]"></div>
+        <div class="flex-1 bg-[#e31b23]"></div>
     </div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6">
@@ -238,22 +247,16 @@
                 <!-- PHOTO -->
                 <div class="flex justify-center lg:justify-start">
                     <div class="relative">
-                        <div class="photo-wrapper w-32 h-32 sm:w-36 sm:h-36 rounded-[28px] p-1">
-                            <div class="w-full h-full rounded-[24px] overflow-hidden bg-white shadow-inner">
+                        <div class="photo-wrapper w-36 h-36 sm:w-40 sm:h-40 rounded-[28px] p-1">
+                            <div class="w-full h-full rounded-[24px] overflow-hidden bg-white">
                                 <img
                                     src="{{ $agent->photo_url }}"
                                     alt="Photo de {{ $agent->nom_complet }}"
-                                    class="w-full h-full object-cover"
+                                    class="w-full h-full object-cover agent-photo-img"
+                                    loading="eager"
+                                    decoding="sync"
                                 >
                             </div>
-                        </div>
-
-                        <!-- Statut -->
-                        <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white border border-slate-200 shadow-md rounded-full px-3 py-1 flex items-center gap-1.5 whitespace-nowrap">
-                            <span class="w-2 h-2 rounded-full bg-green"></span>
-                            <span class="text-[9px] font-extrabold text-slate-600">
-                                AGENT ACTIF
-                            </span>
                         </div>
                     </div>
                 </div>
@@ -506,32 +509,6 @@
             </div>
 
             <!-- =================================================
-                 QR CODE & DATE INTEGRATION
-            ================================================= -->
-            <div class="mt-6 pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/60 p-5 rounded-2xl border border-slate-200/70">
-                <div class="flex items-center gap-4">
-                    <div class="w-16 h-16 rounded-xl bg-white p-1.5 shadow-sm border border-slate-200 flex-shrink-0">
-                        <img
-                            src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ urlencode($agent->public_url) }}&color=00843F"
-                            alt="QR Code {{ $agent->matricule }}"
-                            class="w-full h-full"
-                        >
-                    </div>
-                    <div>
-                        <span class="text-xs font-bold text-slate-900 block">Fiche certifiée et authentifiée</span>
-                        <p class="text-[11px] text-slate-500">Scannez pour vérifier ou partager l'authenticité de cette carte.</p>
-                    </div>
-                </div>
-
-                @if($agent->date_integration_fp)
-                    <div class="text-left sm:text-right">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Intégration FP</span>
-                        <span class="text-xs font-extrabold text-slate-800">{{ $agent->date_integration_fp->format('d/m/Y') }}</span>
-                    </div>
-                @endif
-            </div>
-
-            <!-- =================================================
                  SERVICES RAPIDES
             ================================================= -->
             <div class="mt-9 pt-8 border-t border-slate-100">
@@ -665,9 +642,11 @@
 ========================================================= -->
 <footer class="bg-white border-t border-slate-200 mt-12">
 
-    <div class="h-1 flex">
-        <div class="flex-1 bg-ministry"></div>
-        <div class="w-16 bg-yellow"></div>
+    <!-- Bande institutionnelle fine et subtile (Vert, Jaune, Rouge) -->
+    <div class="h-[2px] flex opacity-75">
+        <div class="flex-1 bg-[#00853f]"></div>
+        <div class="flex-1 bg-[#fcd116]"></div>
+        <div class="flex-1 bg-[#e31b23]"></div>
     </div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-5">

@@ -70,10 +70,11 @@ class AgentController extends Controller
             'fonction' => 'nullable|string|max:255',
             'poste' => 'nullable|string|max:255',
             'date_integration_fp' => 'nullable|date',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:10240',
         ], [
             'matricule.regex' => 'Le matricule doit comporter exactement 6 chiffres suivis d\'une lettre (ex: 123456A).',
             'matricule.unique' => 'Ce matricule existe déjà dans la base de données.',
+            'photo.max' => 'La photo ne doit pas dépasser 10 Mo.',
         ]);
 
         $validated['matricule'] = strtoupper(trim($validated['matricule']));
@@ -118,9 +119,10 @@ class AgentController extends Controller
             'fonction' => 'nullable|string|max:255',
             'poste' => 'nullable|string|max:255',
             'date_integration_fp' => 'nullable|date',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:10240',
         ], [
             'matricule.regex' => 'Le matricule doit comporter exactement 6 chiffres suivis d\'une lettre (ex: 123456A).',
+            'photo.max' => 'La photo ne doit pas dépasser 10 Mo.',
         ]);
 
         $validated['matricule'] = strtoupper(trim($validated['matricule']));

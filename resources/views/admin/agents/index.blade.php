@@ -153,10 +153,10 @@
                                         <i class="fa-solid fa-eye text-emerald-600"></i> Voir Fiche
                                     </a>
 
-                                    <!-- Télécharger l'image brute PNG du QR Code -->
-                                    <a href="{{ route('admin.agents.download-qr', $agent) }}" class="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-extrabold transition-all flex items-center gap-1.5 shadow-xs" title="Télécharger l'image PNG brute du QR Code pour Word/CV">
+                                    <!-- Télécharger l'image stylisée PNG du QR Code -->
+                                    <button type="button" onclick="downloadStyledQR('{{ $agent->public_url }}', '{{ $agent->matricule }}', this)" class="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-extrabold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer" title="Télécharger l'image PNG stylisée du QR Code">
                                         <i class="fa-solid fa-download text-amber-600"></i> Télécharger QR
-                                    </a>
+                                    </button>
 
                                     <!-- Edit -->
                                     <a href="{{ route('admin.agents.edit', $agent) }}" class="p-2 rounded-xl bg-slate-100 hover:bg-orange-100 text-slate-600 hover:text-orange-700 text-xs transition-all" title="Modifier">
@@ -206,3 +206,61 @@
 @endif
 
 @endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.6.1/lib/qr-code-styling.min.js"></script>
+<script>
+/**
+ * Génère et télécharge le QR Code avec le design personnalisé :
+ * - Points ronds (dots)
+ * - Anneaux de coins circulaires (extra-rounded)
+ * - Centre des coins carrés (square)
+ */
+async function downloadStyledQR(url, matricule, btnElement) {
+    const originalHTML = btnElement.innerHTML;
+    btnElement.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-amber-600"></i> Téléchargement...';
+    btnElement.disabled = true;
+
+    try {
+        const qrCode = new QRCodeStyling({
+            width: 1000,
+            height: 1000,
+            type: 'canvas',
+            data: url,
+            margin: 20,
+            qrOptions: {
+                typeNumber: 0,
+                mode: 'Byte',
+                errorCorrectionLevel: 'Q'
+            },
+            dotsOptions: {
+                color: '#000000',
+                type: 'dots'
+            },
+            cornersSquareOptions: {
+                color: '#000000',
+                type: 'extra-rounded'
+            },
+            cornersDotOptions: {
+                color: '#000000',
+                type: 'square'
+            },
+            backgroundOptions: {
+                color: '#ffffff'
+            }
+        });
+
+        await qrCode.download({
+            name: `QR_${matricule}`,
+            extension: 'png'
+        });
+    } catch (error) {
+        console.error('Erreur lors du téléchargement du QR Code:', error);
+        alert('Une erreur est survenue lors de la génération du QR Code.');
+    } finally {
+        btnElement.innerHTML = originalHTML;
+        btnElement.disabled = false;
+    }
+}
+</script>
+@endpush
