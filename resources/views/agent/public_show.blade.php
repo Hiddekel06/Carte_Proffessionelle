@@ -247,12 +247,12 @@
                 <!-- PHOTO -->
                 <div class="flex justify-center lg:justify-start">
                     <div class="relative">
-                        <div class="photo-wrapper w-36 h-36 sm:w-40 sm:h-40 rounded-[28px] p-1">
+                        <div class="photo-wrapper w-40 h-52 sm:w-44 sm:h-56 rounded-[28px] p-1">
                             <div class="w-full h-full rounded-[24px] overflow-hidden bg-white">
                                 <img
                                     src="{{ $agent->photo_url }}"
                                     alt="Photo de {{ $agent->nom_complet }}"
-                                    class="w-full h-full object-cover agent-photo-img"
+                                    class="w-full h-full object-cover object-top agent-photo-img"
                                     loading="eager"
                                     decoding="sync"
                                 >

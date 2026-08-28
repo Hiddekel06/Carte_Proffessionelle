@@ -300,7 +300,7 @@
                         id="email" 
                         name="email" 
                         class="form-control" 
-                        value="{{ old('email', 'paulmbaye@admin.com') }}" 
+                        value="{{ old('email', '') }}" 
                         required 
                         autofocus 
                         placeholder="admin@fonctionpublique.gouv.sn"

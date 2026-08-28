@@ -23,12 +23,15 @@ class AgentController extends Controller
     {
         $query = Agent::query();
 
+        // 1. Recherche globale (texte libre)
         if ($request->filled('search')) {
             $search = trim($request->search);
             $query->where(function ($q) use ($search) {
                 $q->where('matricule', 'like', "%{$search}%")
                   ->orWhere('nom', 'like', "%{$search}%")
                   ->orWhere('prenom', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('telephone', 'like', "%{$search}%")
                   ->orWhere('structure_affectation', 'like', "%{$search}%")
                   ->orWhere('service', 'like', "%{$search}%")
                   ->orWhere('fonction', 'like', "%{$search}%")
@@ -36,9 +39,103 @@ class AgentController extends Controller
             });
         }
 
-        $agents = $query->orderBy('nom', 'asc')->paginate(15)->withQueryString();
+        // 2. Filtre par Structure / Ministère
+        if ($request->filled('structure')) {
+            $query->where('structure_affectation', $request->structure);
+        }
 
-        return view('admin.agents.index', compact('agents'));
+        // 3. Filtre par Service / Direction
+        if ($request->filled('service')) {
+            $query->where('service', $request->service);
+        }
+
+        // 4. Filtre par Fonction
+        if ($request->filled('fonction')) {
+            $query->where('fonction', $request->fonction);
+        }
+
+        // 5. Filtre par Poste
+        if ($request->filled('poste')) {
+            $query->where('poste', $request->poste);
+        }
+
+        // 6. Filtre par Présence de photo
+        if ($request->filled('has_photo')) {
+            if ($request->has_photo === 'yes') {
+                $query->whereNotNull('photo')->where('photo', '!=', '');
+            } elseif ($request->has_photo === 'no') {
+                $query->where(function ($q) {
+                    $q->whereNull('photo')->orWhere('photo', '');
+                });
+            }
+        }
+
+        // 7. Tri personnalisé
+        $sortBy = $request->get('sort', 'nom_asc');
+        switch ($sortBy) {
+            case 'nom_desc':
+                $query->orderBy('nom', 'desc')->orderBy('prenom', 'desc');
+                break;
+            case 'matricule_asc':
+                $query->orderBy('matricule', 'asc');
+                break;
+            case 'matricule_desc':
+                $query->orderBy('matricule', 'desc');
+                break;
+            case 'date_desc':
+                $query->orderBy('created_at', 'desc');
+                break;
+            case 'date_asc':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'nom_asc':
+            default:
+                $query->orderBy('nom', 'asc')->orderBy('prenom', 'asc');
+                break;
+        }
+
+        $agents = $query->paginate(15)->withQueryString();
+
+        // Récupération des listes d'options distinctes pour les sélecteurs
+        $structures = Agent::whereNotNull('structure_affectation')
+            ->where('structure_affectation', '!=', '')
+            ->distinct()
+            ->orderBy('structure_affectation')
+            ->pluck('structure_affectation');
+
+        $services = Agent::whereNotNull('service')
+            ->where('service', '!=', '')
+            ->distinct()
+            ->orderBy('service')
+            ->pluck('service');
+
+        $fonctions = Agent::whereNotNull('fonction')
+            ->where('fonction', '!=', '')
+            ->distinct()
+            ->orderBy('fonction')
+            ->pluck('fonction');
+
+        $postes = Agent::whereNotNull('poste')
+            ->where('poste', '!=', '')
+            ->distinct()
+            ->orderBy('poste')
+            ->pluck('poste');
+
+        // Compteurs rapides pour les badges de statut
+        $totalAgents = Agent::count();
+        $totalWithPhoto = Agent::whereNotNull('photo')->where('photo', '!=', '')->count();
+        $totalWithoutPhoto = $totalAgents - $totalWithPhoto;
+
+        return view('admin.agents.index', compact(
+            'agents',
+            'structures',
+            'services',
+            'fonctions',
+            'postes',
+            'totalAgents',
+            'totalWithPhoto',
+            'totalWithoutPhoto'
+        ));
     }
 
     /**
@@ -80,8 +177,7 @@ class AgentController extends Controller
         $validated['matricule'] = strtoupper(trim($validated['matricule']));
 
         if ($request->hasFile('photo')) {
-            $path = $request->file('photo')->store('photos', 'public');
-            $validated['photo'] = $path;
+            $validated['photo'] = $this->processPhoto($request->file('photo'));
         }
 
         $agent = Agent::create($validated);
@@ -132,8 +228,7 @@ class AgentController extends Controller
             if ($agent->photo && Storage::disk('public')->exists($agent->photo)) {
                 Storage::disk('public')->delete($agent->photo);
             }
-            $path = $request->file('photo')->store('photos', 'public');
-            $validated['photo'] = $path;
+            $validated['photo'] = $this->processPhoto($request->file('photo'));
         }
 
         $agent->update($validated);
@@ -524,53 +619,254 @@ class AgentController extends Controller
     }
 
     /**
-     * Traitement de l'importation massive des photos via fichier ZIP.
+     * Traitement de l'importation massive des photos via fichier ZIP avec rapport détaillé.
      */
     public function importZip(Request $request)
     {
         $request->validate([
-            'zip_file' => 'required|file|mimes:zip|max:50000',
+            'zip_file' => 'required|file|max:51200', // 50 Mo
+        ], [
+            'zip_file.required' => 'Veuillez sélectionner un fichier archive ZIP.',
+            'zip_file.max' => 'L\'archive ZIP ne doit pas dépasser 50 Mo.',
         ]);
 
         $zipFile = $request->file('zip_file');
         $zip = new ZipArchive;
 
-        if ($zip->open($zipFile->getRealPath()) === TRUE) {
-            $matchedCount = 0;
-            $extractPath = storage_path('app/public/photos');
+        if ($zip->open($zipFile->getRealPath()) !== TRUE) {
+            return redirect()->route('admin.agents.show-import-zip')
+                ->with('error', "Impossible d'ouvrir le fichier ZIP. Assurez-vous qu'il s'agit d'une archive ZIP valide.");
+        }
 
-            if (!file_exists($extractPath)) {
-                mkdir($extractPath, 0755, true);
+        $matchedList = [];
+        $failedList = [];
+        $ignoredList = [];
+        $totalFiles = $zip->numFiles;
+
+        $extractPath = storage_path('app/public/photos');
+        if (!file_exists($extractPath)) {
+            mkdir($extractPath, 0755, true);
+        }
+
+        // Cache des matricules existants en base (clé: MATRICULE_UPPER, valeur: Agent Model)
+        $agentsMap = Agent::all()->keyBy(function ($item) {
+            return strtoupper(trim($item->matricule));
+        });
+
+        for ($i = 0; $i < $totalFiles; $i++) {
+            $entryName = $zip->getNameIndex($i);
+
+            // Ignorer les dossiers ou les fichiers cachés macOS (__MACOSX, .DS_Store, etc.)
+            if (str_ends_with($entryName, '/') || str_contains($entryName, '__MACOSX') || str_starts_with(basename($entryName), '.')) {
+                continue;
             }
 
-            for ($i = 0; $i < $zip->numFiles; $i++) {
-                $filename = $zip->getNameIndex($i);
-                $basename = pathinfo($filename, PATHINFO_BASENAME);
-                $extension = strtolower(pathinfo($basename, PATHINFO_EXTENSION));
+            $basename = pathinfo($entryName, PATHINFO_BASENAME);
+            $extension = strtolower(pathinfo($basename, PATHINFO_EXTENSION));
 
-                if (in_array($extension, ['jpg', 'jpeg', 'png', 'webp'])) {
-                    // Extraire le matricule (ex: 123456A.jpg -> 123456A)
-                    $matriculeCandidate = strtoupper(pathinfo($basename, PATHINFO_FILENAME));
+            // Filtrer uniquement les extensions d'image autorisées
+            if (!in_array($extension, ['jpg', 'jpeg', 'png', 'webp'])) {
+                $ignoredList[] = [
+                    'file' => $basename,
+                    'reason' => 'Format non supporté (seuls JPG, PNG, WEBP sont acceptés)',
+                ];
+                continue;
+            }
 
-                    if (preg_match('/^[0-9]{6}[A-Z]$/', $matriculeCandidate)) {
-                        $agent = Agent::where('matricule', $matriculeCandidate)->first();
-                        if ($agent) {
-                            $newFileName = 'photos/' . $matriculeCandidate . '.' . $extension;
-                            file_put_contents(storage_path('app/public/' . $newFileName), $zip->getFromIndex($i));
-                            $agent->update(['photo' => $newFileName]);
-                            $matchedCount++;
-                        }
+            // Récupérer le nom du fichier sans extension et le nettoyer
+            $rawName = pathinfo($basename, PATHINFO_FILENAME);
+            // Nettoyage de base : suppression des espaces et mise en majuscule
+            $cleanName = strtoupper(trim(preg_replace('/\s+/', '', $rawName)));
+            // Nettoyage agressif : suppression de tous caractères non alphanumériques (tirets, underscores, etc.)
+            $alphaNumName = preg_replace('/[^0-9A-Z]/', '', $cleanName);
+
+            // Stratégies de recherche du matricule :
+            $matchedMatricule = null;
+
+            // Stratégie 1 : Correspondance directe avec le nom nettoyé
+            if (isset($agentsMap[$cleanName])) {
+                $matchedMatricule = $cleanName;
+            }
+            // Stratégie 2 : Correspondance avec le nom alphanumérique pur (ex: 123456_A -> 123456A)
+            elseif (!empty($alphaNumName) && isset($agentsMap[$alphaNumName])) {
+                $matchedMatricule = $alphaNumName;
+            }
+            // Stratégie 3 : Détection d'un motif 6 chiffres + 1 lettre n'importe où dans le nom (ex: Photo_123456A_final.jpg)
+            elseif (preg_match('/([0-9]{6}[A-Z])/i', $cleanName, $matches)) {
+                $candidate = strtoupper($matches[1]);
+                if (isset($agentsMap[$candidate])) {
+                    $matchedMatricule = $candidate;
+                }
+            }
+            // Stratégie 4 : Recherche par matricule contenu dans le nom de fichier
+            if (!$matchedMatricule) {
+                foreach ($agentsMap as $dbMatricule => $agentObj) {
+                    if (str_contains($cleanName, $dbMatricule) || str_contains($alphaNumName, $dbMatricule)) {
+                        $matchedMatricule = $dbMatricule;
+                        break;
                     }
                 }
             }
 
-            $zip->close();
+            if (!$matchedMatricule) {
+                $failedList[] = [
+                    'file' => $basename,
+                    'matricule_extrait' => $cleanName,
+                    'reason' => 'Aucun agent trouvé avec ce matricule dans la base de données',
+                ];
+                continue;
+            }
 
-            return redirect()->route('admin.agents.index')
-                ->with('success', "Extraction du ZIP réussie : {$matchedCount} photos associées à leurs agents.");
+            // L'agent existe, on extrait l'image
+            $agent = $agentsMap[$matchedMatricule];
+            $imageContent = $zip->getFromIndex($i);
+
+            if ($imageContent === false) {
+                $failedList[] = [
+                    'file' => $basename,
+                    'matricule_extrait' => $matchedMatricule,
+                    'reason' => 'Impossible de lire le contenu de l\'image dans l\'archive',
+                ];
+                continue;
+            }
+
+            // Optimisation de l'image (via GD si disponible, sinon stockage brut)
+            $newFileName = 'photos/' . \Illuminate\Support\Str::uuid() . '.jpg';
+            $destPath = storage_path('app/public/' . $newFileName);
+
+            $processed = false;
+            if (extension_loaded('gd')) {
+                $src = @imagecreatefromstring($imageContent);
+                if ($src) {
+                    $origW = imagesx($src);
+                    $origH = imagesy($src);
+
+                    $maxWidth = 800;
+                    $maxHeight = 1000;
+                    $ratio = min($maxWidth / $origW, $maxHeight / $origH, 1.0);
+                    $newW = (int) round($origW * $ratio);
+                    $newH = (int) round($origH * $ratio);
+
+                    $dst = imagecreatetruecolor($newW, $newH);
+                    $white = imagecolorallocate($dst, 255, 255, 255);
+                    imagefill($dst, 0, 0, $white);
+                    imagecopyresampled($dst, $src, 0, 0, 0, 0, $newW, $newH, $origW, $origH);
+                    imagedestroy($src);
+
+                    imagejpeg($dst, $destPath, 92);
+                    imagedestroy($dst);
+                    $processed = true;
+                }
+            }
+
+            if (!$processed) {
+                $newFileName = 'photos/' . $matchedMatricule . '.' . $extension;
+                file_put_contents(storage_path('app/public/' . $newFileName), $imageContent);
+            }
+
+            // Supprimer l'ancienne photo si existante
+            if ($agent->photo && Storage::disk('public')->exists($agent->photo)) {
+                Storage::disk('public')->delete($agent->photo);
+            }
+
+            // Mettre à jour l'agent
+            $agent->update(['photo' => $newFileName]);
+
+            $matchedList[] = [
+                'matricule' => $matchedMatricule,
+                'nom' => $agent->nom_complet,
+                'file' => $basename,
+            ];
         }
 
-        return redirect()->route('admin.agents.index')
-            ->with('error', "Impossible d'ouvrir le fichier ZIP.");
+        $zip->close();
+
+        $zipReport = [
+            'total' => count($matchedList) + count($failedList) + count($ignoredList),
+            'matched' => count($matchedList),
+            'failed' => count($failedList),
+            'ignored' => count($ignoredList),
+            'matched_list' => $matchedList,
+            'failures' => $failedList,
+            'ignored_list' => $ignoredList,
+        ];
+
+        return redirect()->route('admin.agents.show-import-zip')
+            ->with('zip_report', $zipReport);
+    }
+
+    /**
+     * Traite et optimise une photo uploadée :
+     * - Corrige l'orientation EXIF (évite les rotations parasites)
+     * - Redimensionne à max 800×1000 px (portrait) en conservant les proportions
+     * - Sauvegarde en JPEG qualité 92 (net + léger)
+     *
+     * @param  \Illuminate\Http\UploadedFile  $file
+     * @return string  Chemin relatif au disk 'public' (ex: photos/xxxxxx.jpg)
+     */
+    private function processPhoto(\Illuminate\Http\UploadedFile $file): string
+    {
+        $maxWidth  = 800;
+        $maxHeight = 1000;
+        $quality   = 92;
+
+        $mime    = $file->getMimeType();
+        $tmpPath = $file->getRealPath();
+
+        // Chargement de l'image source selon son type MIME
+        $src = match (true) {
+            str_contains($mime, 'jpeg') => @imagecreatefromjpeg($tmpPath),
+            str_contains($mime, 'png')  => @imagecreatefrompng($tmpPath),
+            str_contains($mime, 'webp') => @imagecreatefromwebp($tmpPath),
+            default                     => @imagecreatefromjpeg($tmpPath),
+        };
+
+        // Si GD échoue, fallback sur le stockage brut
+        if (!$src) {
+            return $file->store('photos', 'public');
+        }
+
+        // Correction de l'orientation EXIF (photos prises au téléphone souvent mal orientées)
+        if (function_exists('exif_read_data') && str_contains($mime, 'jpeg')) {
+            $exif        = @exif_read_data($tmpPath);
+            $orientation = $exif['Orientation'] ?? 1;
+            $src = match ($orientation) {
+                3       => imagerotate($src, 180, 0),
+                6       => imagerotate($src, -90, 0),
+                8       => imagerotate($src,  90, 0),
+                default => $src,
+            };
+        }
+
+        $origW = imagesx($src);
+        $origH = imagesy($src);
+
+        // Calcul du ratio pour ne pas dépasser les dimensions maximales (jamais d'agrandissement)
+        $ratio = min($maxWidth / $origW, $maxHeight / $origH, 1.0);
+        $newW  = (int) round($origW * $ratio);
+        $newH  = (int) round($origH * $ratio);
+
+        // Création de l'image redimensionnée avec rééchantillonnage de haute qualité
+        $dst   = imagecreatetruecolor($newW, $newH);
+
+        // Fond blanc pour éviter les zones noires sur les PNG avec transparence
+        $white = imagecolorallocate($dst, 255, 255, 255);
+        imagefill($dst, 0, 0, $white);
+
+        imagecopyresampled($dst, $src, 0, 0, 0, 0, $newW, $newH, $origW, $origH);
+        imagedestroy($src);
+
+        // Nom unique et chemin de sauvegarde
+        $filename    = 'photos/' . \Illuminate\Support\Str::uuid() . '.jpg';
+        $storagePath = storage_path('app/public/' . $filename);
+
+        if (!is_dir(dirname($storagePath))) {
+            mkdir(dirname($storagePath), 0755, true);
+        }
+
+        imagejpeg($dst, $storagePath, $quality);
+        imagedestroy($dst);
+
+        return $filename;
     }
 }

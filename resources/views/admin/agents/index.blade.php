@@ -35,25 +35,226 @@
     </div>
 </div>
 
-<!-- Search & Filter Bar -->
-<div class="bg-white border border-slate-200 rounded-2xl p-4 mb-6 shadow-sm">
-    <form method="GET" action="{{ route('admin.agents.index') }}" class="flex flex-col sm:flex-row gap-3">
-        <div class="relative flex-1">
-            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                <i class="fa-solid fa-magnifying-glass"></i>
+<!-- Search & Multi-Criteria Filter Bar -->
+<div class="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 mb-6 shadow-sm">
+    <form method="GET" action="{{ route('admin.agents.index') }}" id="filterForm">
+        
+        <!-- Ligne 1 : Recherche principale + Tri + Boutons d'action -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 mb-4">
+            
+            <!-- Recherche globale -->
+            <div class="lg:col-span-6 relative">
+                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <i class="fa-solid fa-magnifying-glass text-emerald-600"></i>
+                </div>
+                <input 
+                    type="text" 
+                    name="search" 
+                    value="{{ request('search') }}" 
+                    placeholder="Recherche : matricule (123456A), nom, prénom, email, téléphone..." 
+                    class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 transition-all font-medium"
+                >
             </div>
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Rechercher par matricule (ex: 123456A), nom, prénom, structure ou fonction..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 transition-all">
+
+            <!-- Tri des résultats -->
+            <div class="lg:col-span-3 relative">
+                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <i class="fa-solid fa-arrow-down-a-z text-slate-400"></i>
+                </div>
+                <select 
+                    name="sort" 
+                    onchange="document.getElementById('filterForm').submit()"
+                    class="w-full pl-10 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm font-semibold focus:outline-none focus:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 transition-all appearance-none cursor-pointer"
+                >
+                    <option value="nom_asc" {{ request('sort', 'nom_asc') == 'nom_asc' ? 'selected' : '' }}>Nom (A → Z)</option>
+                    <option value="nom_desc" {{ request('sort') == 'nom_desc' ? 'selected' : '' }}>Nom (Z → A)</option>
+                    <option value="matricule_asc" {{ request('sort') == 'matricule_asc' ? 'selected' : '' }}>Matricule (Croissant)</option>
+                    <option value="matricule_desc" {{ request('sort') == 'matricule_desc' ? 'selected' : '' }}>Matricule (Décroissant)</option>
+                    <option value="date_desc" {{ request('sort') == 'date_desc' ? 'selected' : '' }}>Plus récents d'abord</option>
+                    <option value="date_asc" {{ request('sort') == 'date_asc' ? 'selected' : '' }}>Plus anciens d'abord</option>
+                </select>
+                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400 text-xs">
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+            </div>
+
+            <!-- Boutons : Filtrer & Réinitialiser -->
+            <div class="lg:col-span-3 flex gap-2">
+                <button 
+                    type="submit" 
+                    class="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-sm font-extrabold shadow-sm shadow-emerald-600/20 transition-all duration-200 flex items-center justify-center gap-2"
+                >
+                    <i class="fa-solid fa-filter text-xs"></i> Appliquer
+                </button>
+                @if(request()->hasAny(['search', 'structure', 'service', 'fonction', 'poste', 'has_photo', 'sort']) && (request('search') || request('structure') || request('service') || request('fonction') || request('poste') || request('has_photo') || (request('sort') && request('sort') != 'nom_asc')))
+                    <a 
+                        href="{{ route('admin.agents.index') }}" 
+                        title="Effacer tous les filtres" 
+                        class="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 border border-slate-200 hover:border-rose-200 text-sm font-bold transition-all flex items-center justify-center gap-1.5"
+                    >
+                        <i class="fa-solid fa-rotate-left text-xs"></i>
+                    </a>
+                @endif
+            </div>
         </div>
-        <div class="flex gap-2">
-            <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition-all shadow-sm">
-                Filtrer
-            </button>
-            @if(request('search'))
-                <a href="{{ route('admin.agents.index') }}" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold transition-all">
-                    Réinitialiser
+
+        <!-- Ligne 2 : Filtres avancés par critères spécifiques -->
+        <div class="pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            
+            <!-- 1. Structure / Ministère -->
+            <div class="relative">
+                <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">Ministère / Structure</label>
+                <select 
+                    name="structure" 
+                    onchange="document.getElementById('filterForm').submit()"
+                    class="w-full px-3 py-2 bg-slate-50 border {{ request('structure') ? 'border-emerald-500 bg-emerald-50/30 text-emerald-900 font-bold' : 'border-slate-200 text-slate-700 font-medium' }} rounded-xl text-xs focus:outline-none focus:border-emerald-600 focus:bg-white transition-all appearance-none cursor-pointer pr-7"
+                >
+                    <option value="">Toutes les structures</option>
+                    @foreach($structures as $struct)
+                        <option value="{{ $struct }}" {{ request('structure') == $struct ? 'selected' : '' }}>
+                            {{ Str::limit($struct, 28) }}
+                        </option>
+                    @endforeach
+                </select>
+                <div class="absolute bottom-2.5 right-2.5 pointer-events-none text-slate-400 text-[10px]">
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+            </div>
+
+            <!-- 2. Service / Direction -->
+            <div class="relative">
+                <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">Direction / Service</label>
+                <select 
+                    name="service" 
+                    onchange="document.getElementById('filterForm').submit()"
+                    class="w-full px-3 py-2 bg-slate-50 border {{ request('service') ? 'border-emerald-500 bg-emerald-50/30 text-emerald-900 font-bold' : 'border-slate-200 text-slate-700 font-medium' }} rounded-xl text-xs focus:outline-none focus:border-emerald-600 focus:bg-white transition-all appearance-none cursor-pointer pr-7"
+                >
+                    <option value="">Tous les services</option>
+                    @foreach($services as $srv)
+                        <option value="{{ $srv }}" {{ request('service') == $srv ? 'selected' : '' }}>
+                            {{ Str::limit($srv, 28) }}
+                        </option>
+                    @endforeach
+                </select>
+                <div class="absolute bottom-2.5 right-2.5 pointer-events-none text-slate-400 text-[10px]">
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+            </div>
+
+            <!-- 3. Fonction (Corps de métier) -->
+            <div class="relative">
+                <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">Fonction / Métier</label>
+                <select 
+                    name="fonction" 
+                    onchange="document.getElementById('filterForm').submit()"
+                    class="w-full px-3 py-2 bg-slate-50 border {{ request('fonction') ? 'border-emerald-500 bg-emerald-50/30 text-emerald-900 font-bold' : 'border-slate-200 text-slate-700 font-medium' }} rounded-xl text-xs focus:outline-none focus:border-emerald-600 focus:bg-white transition-all appearance-none cursor-pointer pr-7"
+                >
+                    <option value="">Toutes les fonctions</option>
+                    @foreach($fonctions as $fnc)
+                        <option value="{{ $fnc }}" {{ request('fonction') == $fnc ? 'selected' : '' }}>
+                            {{ Str::limit($fnc, 28) }}
+                        </option>
+                    @endforeach
+                </select>
+                <div class="absolute bottom-2.5 right-2.5 pointer-events-none text-slate-400 text-[10px]">
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+            </div>
+
+            <!-- 4. Poste (Titre / Rôle) -->
+            <div class="relative">
+                <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">Poste / Titre</label>
+                <select 
+                    name="poste" 
+                    onchange="document.getElementById('filterForm').submit()"
+                    class="w-full px-3 py-2 bg-slate-50 border {{ request('poste') ? 'border-emerald-500 bg-emerald-50/30 text-emerald-900 font-bold' : 'border-slate-200 text-slate-700 font-medium' }} rounded-xl text-xs focus:outline-none focus:border-emerald-600 focus:bg-white transition-all appearance-none cursor-pointer pr-7"
+                >
+                    <option value="">Tous les postes</option>
+                    @foreach($postes as $pst)
+                        <option value="{{ $pst }}" {{ request('poste') == $pst ? 'selected' : '' }}>
+                            {{ Str::limit($pst, 28) }}
+                        </option>
+                    @endforeach
+                </select>
+                <div class="absolute bottom-2.5 right-2.5 pointer-events-none text-slate-400 text-[10px]">
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+            </div>
+
+            <!-- 5. Statut Photo -->
+            <div class="relative">
+                <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">Photo de profil</label>
+                <select 
+                    name="has_photo" 
+                    onchange="document.getElementById('filterForm').submit()"
+                    class="w-full px-3 py-2 bg-slate-50 border {{ request('has_photo') ? 'border-emerald-500 bg-emerald-50/30 text-emerald-900 font-bold' : 'border-slate-200 text-slate-700 font-medium' }} rounded-xl text-xs focus:outline-none focus:border-emerald-600 focus:bg-white transition-all appearance-none cursor-pointer pr-7"
+                >
+                    <option value="">Toutes les fiches</option>
+                    <option value="yes" {{ request('has_photo') == 'yes' ? 'selected' : '' }}>Avec photo uniquement ({{ $totalWithPhoto }})</option>
+                    <option value="no" {{ request('has_photo') == 'no' ? 'selected' : '' }}>Sans photo uniquement ({{ $totalWithoutPhoto }})</option>
+                </select>
+                <div class="absolute bottom-2.5 right-2.5 pointer-events-none text-slate-400 text-[10px]">
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Badges des filtres actifs (Tags cliquables pour retirer un filtre individuel) -->
+        @if(request('structure') || request('service') || request('fonction') || request('poste') || request('has_photo') || request('search'))
+            <div class="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-2">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 mr-1">
+                    <i class="fa-solid fa-sliders text-emerald-600"></i> Filtres actifs :
+                </span>
+
+                @if(request('search'))
+                    <a href="{{ request()->fullUrlWithQuery(['search' => null]) }}" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 transition-colors group">
+                        <span>Recherche : "{{ request('search') }}"</span>
+                        <i class="fa-solid fa-xmark text-[10px] text-emerald-600 group-hover:text-rose-600"></i>
+                    </a>
+                @endif
+
+                @if(request('structure'))
+                    <a href="{{ request()->fullUrlWithQuery(['structure' => null]) }}" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 transition-colors group">
+                        <span>Structure : {{ Str::limit(request('structure'), 20) }}</span>
+                        <i class="fa-solid fa-xmark text-[10px] text-emerald-600 group-hover:text-rose-600"></i>
+                    </a>
+                @endif
+
+                @if(request('service'))
+                    <a href="{{ request()->fullUrlWithQuery(['service' => null]) }}" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 transition-colors group">
+                        <span>Service : {{ Str::limit(request('service'), 20) }}</span>
+                        <i class="fa-solid fa-xmark text-[10px] text-emerald-600 group-hover:text-rose-600"></i>
+                    </a>
+                @endif
+
+                @if(request('fonction'))
+                    <a href="{{ request()->fullUrlWithQuery(['fonction' => null]) }}" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 transition-colors group">
+                        <span>Fonction : {{ Str::limit(request('fonction'), 20) }}</span>
+                        <i class="fa-solid fa-xmark text-[10px] text-emerald-600 group-hover:text-rose-600"></i>
+                    </a>
+                @endif
+
+                @if(request('poste'))
+                    <a href="{{ request()->fullUrlWithQuery(['poste' => null]) }}" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 transition-colors group">
+                        <span>Poste : {{ Str::limit(request('poste'), 20) }}</span>
+                        <i class="fa-solid fa-xmark text-[10px] text-emerald-600 group-hover:text-rose-600"></i>
+                    </a>
+                @endif
+
+                @if(request('has_photo'))
+                    <a href="{{ request()->fullUrlWithQuery(['has_photo' => null]) }}" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 transition-colors group">
+                        <span>{{ request('has_photo') == 'yes' ? 'Avec photo' : 'Sans photo' }}</span>
+                        <i class="fa-solid fa-xmark text-[10px] text-emerald-600 group-hover:text-rose-600"></i>
+                    </a>
+                @endif
+
+                <a href="{{ route('admin.agents.index') }}" class="text-[11px] font-bold text-rose-600 hover:text-rose-800 ml-1 underline decoration-dotted">
+                    Tout effacer
                 </a>
-            @endif
-        </div>
+            </div>
+        @endif
+
     </form>
 </div>
 

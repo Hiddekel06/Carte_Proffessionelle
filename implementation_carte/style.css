@@ -1,0 +1,444 @@
+/* =====================================================================
+   VARIABLES — modifie ces valeurs pour personnaliser la carte
+   ===================================================================== */
+:root {
+  /* Dimensions de la carte (écran) */
+  --card-width: 760px;
+  --card-height: 1070px;
+  --card-radius: 12px;
+  --card-border-color: #d9dcd8;
+
+  /* Dimensions d'impression (physiques) */
+  --print-width: 85mm;
+  --print-height: 120mm;
+
+  /* Couleurs du drapeau du Sénégal */
+  --flag-green: #00853F;
+  --flag-yellow: #FDEF42;
+  --flag-red: #E31B23;
+
+  /* Palette principale */
+  --navy: #142850;
+  --navy-strong: #0f1f3d;
+  --dark-band: #0b1a13;       /* bandeau poste + pied de carte */
+  --dark-band-2: #12241b;
+  --icon-green: #1f8a54;
+  --pale-green: #bfe0cd;
+  --pale-green-soft: #dcf0e4;
+  --divider-green: #a9d6bc;
+  --photo-border: #262b28;
+
+  /* Typographie */
+  --font-display: 'Poppins', 'Montserrat', Arial, sans-serif;
+  --font-body: 'Inter', Arial, sans-serif;
+
+  /* Espacements */
+  --side-padding: 58px;
+}
+
+/* =====================================================================
+   BASE
+   ===================================================================== */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: #eef1ee;
+  font-family: var(--font-body);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 16px 64px;
+}
+
+.page-toolbar {
+  width: 100%;
+  max-width: var(--card-width);
+  display: flex;
+  justify-content: center;
+  margin-bottom: 22px;
+}
+
+.print-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  background: var(--dark-band);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(11, 26, 19, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.print-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 22px rgba(11, 26, 19, 0.32); }
+.print-btn:active { transform: translateY(0); }
+
+.stage {
+  display: flex;
+  justify-content: center;
+}
+
+/* =====================================================================
+   CARTE — conteneur principal
+   ===================================================================== */
+.card {
+  position: relative;
+  width: var(--card-width);
+  height: var(--card-height);
+  background: #ffffff;
+  border: 1.5px solid var(--card-border-color);
+  border-radius: var(--card-radius);
+  overflow: hidden;
+  box-shadow: 0 20px 45px rgba(20, 40, 30, 0.14);
+  font-family: var(--font-display);
+}
+
+/* =====================================================================
+   DÉCOR — Ruban diagonal tricolore Sénégal (derrière tout le contenu)
+   ===================================================================== */
+:root {
+  --ribbon-green: #00853F;
+  --ribbon-yellow: #FDEF42;
+  --ribbon-red: #E2596B;        /* rouge légèrement adouci, proche référence */
+  --ribbon-stripe-width: 10px;  /* épaisseur de chaque bande */
+  --ribbon-gap: 3px;            /* liseré clair entre les bandes */
+  --ribbon-length: 1600px;      /* longueur du ruban (> diagonale de la carte) */
+  --ribbon-angle: 54.6deg;      /* angle réel coin-à-coin pour une carte 760×1070 */
+  --ribbon-opacity: 1;
+}
+
+.senegal-ribbon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 0;                   /* reste derrière tout le contenu (z-index: 2) */
+  width: var(--ribbon-length);
+  height: calc(var(--ribbon-stripe-width) * 3 + var(--ribbon-gap) * 2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ribbon-gap);
+  transform: translate(-50%, -50%) rotate(var(--ribbon-angle));
+  transform-origin: center;
+  opacity: var(--ribbon-opacity);
+  filter: drop-shadow(0 2px 3px rgba(20, 40, 30, 0.10));
+  pointer-events: none;
+}
+
+.senegal-ribbon span {
+  display: block;
+  width: 100%;
+  height: var(--ribbon-stripe-width);
+  border-radius: 1px;
+}
+
+.stripe-green  { background: var(--ribbon-green); }
+.stripe-yellow { background: var(--ribbon-yellow); }
+.stripe-red    { background: var(--ribbon-red); }
+
+/* =====================================================================
+   DÉCOR — motifs de points pâles
+   ===================================================================== */
+.dot-pattern {
+  position: absolute;
+  z-index: 0;
+  width: 180px;
+  height: 180px;
+  background-image: radial-gradient(var(--pale-green) 1.6px, transparent 1.8px);
+  background-size: 13px 13px;
+  opacity: 0.4;
+}
+.dot-pattern--left {
+  left: -70px;
+  top: 630px;
+  -webkit-mask-image: radial-gradient(circle at 30% 30%, black 55%, transparent 78%);
+  mask-image: radial-gradient(circle at 30% 30%, black 55%, transparent 78%);
+}
+.dot-pattern--right {
+  right: -75px;
+  top: 760px;
+  -webkit-mask-image: radial-gradient(circle at 70% 40%, black 55%, transparent 78%);
+  mask-image: radial-gradient(circle at 70% 40%, black 55%, transparent 78%);
+}
+
+/* =====================================================================
+   DÉCOR — filigrane circulaire derrière la photo
+   ===================================================================== */
+.watermark {
+  position: absolute;
+  z-index: 0;
+  top: 195px;
+  left: 50%;
+  width: 360px;
+  height: 360px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  opacity: 0.5;
+  background:
+    radial-gradient(circle at 30% 32%, rgba(0, 133, 63, 0.10), transparent 42%),
+    radial-gradient(circle at 68% 30%, rgba(253, 200, 66, 0.12), transparent 40%),
+    radial-gradient(circle at 50% 68%, rgba(230, 60, 76, 0.09), transparent 45%);
+  border: 1px solid rgba(20, 40, 40, 0.06);
+}
+.watermark::before {
+  content: "";
+  position: absolute;
+  inset: 34px;
+  border-radius: 50%;
+  border: 1px dashed rgba(20, 40, 40, 0.10);
+}
+
+/* =====================================================================
+   1. DRAPEAU
+   ===================================================================== */
+.flag {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  width: 186px;
+  height: 18px;
+  margin: 26px auto 0;
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.flag-stripe { flex: 1; position: relative; }
+.flag-stripe--green { background: var(--flag-green); }
+.flag-stripe--yellow {
+  background: var(--flag-yellow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.flag-stripe--red { background: var(--flag-red); }
+.flag-star {
+  color: var(--flag-green);
+  font-size: 13px;
+  line-height: 1;
+  transform: translateY(-0.5px);
+}
+
+/* =====================================================================
+   2. TITRE DU MINISTÈRE (éditable)
+   ===================================================================== */
+.ministry-title {
+  position: relative;
+  z-index: 2;
+  margin: 16px auto 0;
+  padding: 0 64px;
+  max-width: 640px;
+  text-align: center;
+  color: var(--navy);
+  font-size: 21px;
+  font-weight: 800;
+  font-style: italic;
+  line-height: 1.42;
+  letter-spacing: 0.1px;
+}
+
+/* =====================================================================
+   5. PHOTO DE PROFIL
+   ===================================================================== */
+.photo-wrap {
+  position: relative;
+  z-index: 2;
+  width: 260px;
+  height: 290px;
+  margin: 28px auto 0;
+  border-radius: 28px;
+  border: 3px solid var(--photo-border);
+  background: #eef1ee;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(20, 30, 25, 0.18);
+}
+.photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* =====================================================================
+   6. BANDEAU DU POSTE
+   ===================================================================== */
+.position-banner {
+  position: relative;
+  z-index: 2;
+  width: 78%;
+  margin: 32px auto 0;
+  padding: 17px 26px;
+  background: linear-gradient(135deg, var(--dark-band), var(--dark-band-2));
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  overflow: hidden;
+  box-shadow: 0 10px 22px rgba(11, 26, 19, 0.28);
+}
+.position-text {
+  color: #ffffff;
+  font-size: 16.5px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.banner-dots {
+  flex-shrink: 0;
+  width: 64px;
+  height: 100%;
+  min-height: 20px;
+  background-image: radial-gradient(rgba(60, 200, 130, 0.85) 1.4px, transparent 1.6px);
+  background-size: 8px 8px;
+  opacity: 0.8;
+}
+
+/* =====================================================================
+   7. INFORMATIONS DE L'AGENT
+   ===================================================================== */
+.info-list {
+  position: relative;
+  z-index: 2;
+  list-style: none;
+  margin: 30px 0 0;
+  padding: 0 var(--side-padding);
+}
+.info-row {
+  display: grid;
+  grid-template-columns: 36px 14px 128px 1fr;
+  align-items: center;
+  column-gap: 10px;
+  padding: 13px 0;
+}
+.info-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--icon-green);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 8px rgba(31, 138, 84, 0.35);
+}
+.info-icon svg { width: 18px; height: 18px; }
+.info-divider {
+  width: 2px;
+  height: 28px;
+  background: var(--divider-green);
+  border-radius: 2px;
+  justify-self: center;
+}
+.info-label {
+  color: var(--navy);
+  font-weight: 800;
+  font-size: 16.5px;
+  white-space: nowrap;
+}
+.info-colon {
+  display: none; /* le ":" est rendu via ::after du label pour un alignement propre */
+}
+.info-label::after {
+  content: " :";
+}
+.info-value {
+  color: var(--navy-strong);
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+/* =====================================================================
+   8. PIED DE CARTE
+   ===================================================================== */
+.card-footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 58px;
+  background: var(--dark-band);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+.card-footer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--icon-green), #57d191, var(--icon-green));
+}
+.card-footer p {
+  margin: 0;
+  padding: 0 24px;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  text-align: center;
+  white-space: normal;
+}
+
+/* =====================================================================
+   RESPONSIVE — écran étroit : la carte rétrécit proportionnellement
+   ===================================================================== */
+@media (max-width: 800px) {
+  .card {
+    transform: scale(calc((100vw - 32px) / 760));
+    transform-origin: top center;
+    margin-bottom: calc((100vw - 32px) / 760 * -1070px + (100vw - 32px) / 760 * 1070px);
+  }
+  .stage { width: 100%; overflow: visible; }
+  body { padding-bottom: 96px; }
+}
+
+/* =====================================================================
+   IMPRESSION — export PDF / impression physique
+   ===================================================================== */
+@page {
+  size: var(--print-width) var(--print-height);
+  margin: 0;
+}
+
+@media print {
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #ffffff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .page-toolbar { display: none !important; }
+
+  .stage {
+    width: 100%;
+    height: 100%;
+  }
+
+  .card {
+    width: var(--print-width);
+    height: var(--print-height);
+    box-shadow: none;
+    border-radius: 0;
+    border: none;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    transform: none;
+    margin: 0;
+  }
+
+  .card * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

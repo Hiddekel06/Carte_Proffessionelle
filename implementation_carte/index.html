@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Carte Professionnelle — Ministère de la Fonction Publique</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Bouton d'impression : masqué à l'impression via CSS -->
+  <div class="page-toolbar">
+    <button id="printBtn" class="print-btn" type="button">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z"/>
+      </svg>
+      Imprimer la carte
+    </button>
+  </div>
+
+  <main class="stage">
+    <section class="card" id="card" aria-label="Carte professionnelle">
+
+      <!-- Décor : ruban diagonal tricolore Sénégal -->
+      <div class="senegal-ribbon" aria-hidden="true">
+        <span class="stripe-red"></span>
+        <span class="stripe-yellow"></span>
+        <span class="stripe-green"></span>
+      </div>
+
+      <!-- Décor : motifs de points pâles -->
+      <div class="dot-pattern dot-pattern--left" aria-hidden="true"></div>
+      <div class="dot-pattern dot-pattern--right" aria-hidden="true"></div>
+
+      <!-- Décor : filigrane circulaire derrière la photo -->
+      <div class="watermark" aria-hidden="true"></div>
+
+      <!-- 1. Drapeau du Sénégal -->
+      <div class="flag" role="img" aria-label="Drapeau du Sénégal">
+        <span class="flag-stripe flag-stripe--green"></span>
+        <span class="flag-stripe flag-stripe--yellow">
+          <span class="flag-star">&#9733;</span>
+        </span>
+        <span class="flag-stripe flag-stripe--red"></span>
+      </div>
+
+      <!-- 2. Titre du ministère (éditable) -->
+      <h1 class="ministry-title">
+        MINISTÈRE DE LA FONCTION PUBLIQUE,<br />
+        DU TRAVAIL ET DE LA REFORME<br />
+        DU SERVICE PUBLIC
+      </h1>
+
+      <!-- 5. Photo de profil (remplacer assets/profile-photo.jpg) -->
+      <div class="photo-wrap">
+        <img
+          class="photo"
+          id="profilePhoto"
+          src="assets/profile-photo.jpg"
+          alt="Photo de l'agent"
+          onerror="this.onerror=null;this.src=this.getAttribute('data-placeholder');"
+          data-placeholder="assets/placeholder.svg"
+        />
+      </div>
+
+      <!-- 6. Bandeau du poste occupé -->
+      <div class="position-banner">
+        <span class="position-text">Chef de division Innovation numérique et PMO</span>
+        <span class="banner-dots" aria-hidden="true"></span>
+      </div>
+
+      <!-- 7. Informations de l'agent -->
+      <ul class="info-list">
+
+        <li class="info-row">
+          <span class="info-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="8" r="4"/>
+              <path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"/>
+            </svg>
+          </span>
+          <span class="info-divider"></span>
+          <span class="info-label">Agent</span>
+          <span class="info-colon">:</span>
+          <span class="info-value" data-field="agent">Pape Waly DIOUF</span>
+        </li>
+
+        <li class="info-row">
+          <span class="info-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="5" width="18" height="14" rx="2"/>
+              <circle cx="8.5" cy="10.5" r="1.5"/>
+              <path d="M6 15c.6-1.4 1.8-2 2.5-2s1.9.6 2.5 2M14 9h4M14 13h4M14 16h2.5"/>
+            </svg>
+          </span>
+          <span class="info-divider"></span>
+          <span class="info-label">Matricule</span>
+          <span class="info-colon">:</span>
+          <span class="info-value" data-field="matricule">752124A</span>
+        </li>
+
+        <li class="info-row">
+          <span class="info-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="12" rx="1.5"/>
+              <path d="M8 20h8M12 16v4"/>
+            </svg>
+          </span>
+          <span class="info-divider"></span>
+          <span class="info-label">Service</span>
+          <span class="info-colon">:</span>
+          <span class="info-value" data-field="service">Direction des Systèmes d'Information</span>
+        </li>
+
+        <li class="info-row">
+          <span class="info-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 10l8-5 8 5"/>
+              <path d="M5 10v9M9 10v9M15 10v9M19 10v9"/>
+              <path d="M3 19h18"/>
+            </svg>
+          </span>
+          <span class="info-divider"></span>
+          <span class="info-label">Fonction</span>
+          <span class="info-colon">:</span>
+          <span class="info-value" data-field="fonction">Ingénieur Informaticien</span>
+        </li>
+
+      </ul>
+
+      <!-- 8. Pied de carte -->
+      <footer class="card-footer">
+        <p>Carte professionnelle / En cas de perte, contactez le ministère au 338396600</p>
+      </footer>
+
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
