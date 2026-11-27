@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Agent;
+use App\Models\CarteEvenement;
+use App\Support\QrCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -70,7 +72,21 @@ class AgentController extends Controller
             }
         }
 
-        // 7. Tri personnalisé
+        // Compteurs par état de carte (en tenant compte des autres filtres)
+        $compteursEtat = ['tous' => (clone $query)->count()];
+        foreach (array_keys(Agent::ETATS_CARTE) as $etat) {
+            $compteursEtat[$etat] = (clone $query)->etatCarte($etat)->count();
+        }
+
+        // 7. Filtre par état de la carte (onglets)
+        $etatCarte = $request->get('etat');
+        if (array_key_exists((string) $etatCarte, Agent::ETATS_CARTE)) {
+            $query->etatCarte($etatCarte);
+        } else {
+            $etatCarte = null;
+        }
+
+        // 8. Tri personnalisé
         $sortBy = $request->get('sort', 'nom_asc');
         switch ($sortBy) {
             case 'nom_desc':
@@ -134,8 +150,101 @@ class AgentController extends Controller
             'postes',
             'totalAgents',
             'totalWithPhoto',
-            'totalWithoutPhoto'
+            'totalWithoutPhoto',
+            'compteursEtat',
+            'etatCarte'
         ));
+    }
+
+    /**
+     * Marque la carte d'un agent comme imprimée (appelé depuis la page carte
+     * lors de l'impression ou du téléchargement PDF).
+     */
+    public function marquerImprimee(Agent $agent)
+    {
+        $agent->update(['carte_imprimee_le' => now()]);
+        CarteEvenement::enregistrer($agent, CarteEvenement::IMPRIMEE);
+
+        return response()->json([
+            'etat' => $agent->etat_carte,
+            'libelle' => Agent::ETATS_CARTE[$agent->etat_carte],
+            'imprimee_le' => $agent->carte_imprimee_le->format('d/m/Y H:i'),
+        ]);
+    }
+
+    /**
+     * Change l'état de la carte de plusieurs agents à la fois.
+     * Règle : une carte ne peut être remise que si elle a été imprimée.
+     */
+    public function changerEtatCarte(Request $request)
+    {
+        $data = $request->validate([
+            'action' => ['required', Rule::in(['imprimee', 'remise', 'annuler_remise', 'non_imprimee'])],
+            'agents' => ['required', 'array', 'min:1'],
+            'agents.*' => ['integer', 'exists:agents,id'],
+        ], [
+            'agents.required' => 'Veuillez cocher au moins un agent.',
+        ]);
+
+        $agents = Agent::whereIn('id', $data['agents'])->get();
+        $modifies = 0;
+        $refuses = [];
+
+        foreach ($agents as $agent) {
+            switch ($data['action']) {
+                case 'imprimee':
+                    $agent->carte_imprimee_le ??= now();
+                    break;
+
+                case 'remise':
+                    if (!$agent->carte_imprimee_le) {
+                        $refuses[] = $agent->nom_complet;
+                        continue 2;
+                    }
+                    $agent->carte_remise_le ??= now();
+                    break;
+
+                case 'annuler_remise':
+                    $agent->carte_remise_le = null;
+                    break;
+
+                case 'non_imprimee':
+                    $agent->carte_imprimee_le = null;
+                    $agent->carte_remise_le = null;
+                    break;
+            }
+
+            if ($agent->isDirty()) {
+                $agent->save();
+                CarteEvenement::enregistrer($agent, match ($data['action']) {
+                    'imprimee'       => CarteEvenement::IMPRIMEE,
+                    'remise'         => CarteEvenement::REMISE,
+                    'annuler_remise' => CarteEvenement::ANNULATION_REMISE,
+                    'non_imprimee'   => CarteEvenement::REINITIALISEE,
+                });
+                $modifies++;
+            }
+        }
+
+        $libelles = [
+            'imprimee' => 'marquée(s) comme imprimée(s)',
+            'remise' => 'marquée(s) comme remise(s)',
+            'annuler_remise' => 'repassée(s) en « À remettre »',
+            'non_imprimee' => 'repassée(s) en « Non imprimée »',
+        ];
+
+        $redirect = back();
+        if ($modifies > 0) {
+            $redirect = $redirect->with('success', "{$modifies} carte(s) {$libelles[$data['action']]}.");
+        }
+        if ($refuses) {
+            $liste = implode(', ', array_slice($refuses, 0, 5)) . (count($refuses) > 5 ? '…' : '');
+            $redirect = $redirect->with('error', count($refuses) . " carte(s) non remise(s) car pas encore imprimée(s) : {$liste}.");
+        } elseif ($modifies === 0) {
+            $redirect = $redirect->with('success', 'Aucun changement : les cartes sélectionnées étaient déjà dans cet état.');
+        }
+
+        return $redirect;
     }
 
     /**
@@ -167,6 +276,7 @@ class AgentController extends Controller
             'fonction' => 'nullable|string|max:255',
             'poste' => 'nullable|string|max:255',
             'date_integration_fp' => 'nullable|date',
+            'modele_carte' => ['nullable', Rule::in([Agent::MODELE_STANDARD, Agent::MODELE_INSPECTEUR])],
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:10240',
         ], [
             'matricule.regex' => 'Le matricule doit comporter exactement 6 chiffres suivis d\'une lettre (ex: 123456A).',
@@ -215,6 +325,7 @@ class AgentController extends Controller
             'fonction' => 'nullable|string|max:255',
             'poste' => 'nullable|string|max:255',
             'date_integration_fp' => 'nullable|date',
+            'modele_carte' => ['nullable', Rule::in([Agent::MODELE_STANDARD, Agent::MODELE_INSPECTEUR])],
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:10240',
         ], [
             'matricule.regex' => 'Le matricule doit comporter exactement 6 chiffres suivis d\'une lettre (ex: 123456A).',
@@ -393,14 +504,8 @@ class AgentController extends Controller
      */
     public function downloadQr(Agent $agent)
     {
-        // QR Code brut haute résolution (800x800), noir sur blanc pur
-        $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=800x800&data=" . urlencode($agent->public_url) . "&color=000000&bgcolor=ffffff";
-        
-        $imageData = @file_get_contents($qrUrl);
-
-        if (!$imageData) {
-            return back()->with('error', "Impossible de récupérer l'image du QR Code.");
-        }
+        // QR Code brut haute résolution, noir sur blanc, généré localement
+        $imageData = QrCode::png($agent->public_url);
 
         $fileName = 'QR_' . $agent->matricule . '.png';
 
@@ -516,6 +621,18 @@ class AgentController extends Controller
             $poste = $getVal(['poste', 'titre', 'emploi', 'role', 'responsabilite', 'charge']);
             $dateIntegration = $getVal(['dateintegrationfp', 'dateintegration', 'datepriseservice', 'integration', 'dateentree']);
 
+            // Modèle de carte (optionnel) : « inspecteur » / « standard », sinon automatique
+            $modeleCarte = null;
+            $modeleBrut = $getVal(['modelecarte', 'modele', 'typecarte']);
+            if ($modeleBrut !== null) {
+                $modeleBrut = \Illuminate\Support\Str::lower(\Illuminate\Support\Str::ascii($modeleBrut));
+                if (str_contains($modeleBrut, 'inspect') || str_contains($modeleBrut, 'control')) {
+                    $modeleCarte = Agent::MODELE_INSPECTEUR;
+                } elseif (str_contains($modeleBrut, 'standard')) {
+                    $modeleCarte = Agent::MODELE_STANDARD;
+                }
+            }
+
             // Validation stricte uniquement sur les champs MANDATORY (Matricule, Nom, Prénom)
             $rowErrors = [];
 
@@ -586,6 +703,7 @@ class AgentController extends Controller
                     'fonction' => $fonction ?? $existingAgent->fonction,
                     'poste' => $poste ?? $existingAgent->poste,
                     'date_integration_fp' => $formattedDate ?? $existingAgent->date_integration_fp,
+                    'modele_carte' => $modeleCarte ?? $existingAgent->modele_carte,
                 ]);
                 $updatedCount++;
             } else {
@@ -601,6 +719,7 @@ class AgentController extends Controller
                     'fonction' => $fonction,
                     'poste' => $poste,
                     'date_integration_fp' => $formattedDate,
+                    'modele_carte' => $modeleCarte,
                 ]);
                 $addedCount++;
             }

@@ -38,7 +38,10 @@
 <!-- Search & Multi-Criteria Filter Bar -->
 <div class="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 mb-6 shadow-sm">
     <form method="GET" action="{{ route('admin.agents.index') }}" id="filterForm">
-        
+        @if($etatCarte)
+            <input type="hidden" name="etat" value="{{ $etatCarte }}">
+        @endif
+
         <!-- Ligne 1 : Recherche principale + Tri + Boutons d'action -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 mb-4">
             
@@ -258,6 +261,49 @@
     </form>
 </div>
 
+<!-- Onglets : état de la carte professionnelle -->
+@php
+    $ongletsEtat = [
+        null => ['label' => 'Toutes', 'icone' => 'fa-layer-group', 'compte' => $compteursEtat['tous']],
+        \App\Models\Agent::ETAT_NON_IMPRIMEE => ['label' => 'Non imprimées', 'icone' => 'fa-print', 'compte' => $compteursEtat[\App\Models\Agent::ETAT_NON_IMPRIMEE]],
+        \App\Models\Agent::ETAT_A_REMETTRE => ['label' => 'À remettre', 'icone' => 'fa-hourglass-half', 'compte' => $compteursEtat[\App\Models\Agent::ETAT_A_REMETTRE]],
+        \App\Models\Agent::ETAT_REMISE => ['label' => 'Remises', 'icone' => 'fa-circle-check', 'compte' => $compteursEtat[\App\Models\Agent::ETAT_REMISE]],
+    ];
+@endphp
+<div class="flex flex-wrap items-center gap-2 mb-4">
+    @foreach($ongletsEtat as $cle => $onglet)
+        @php($actif = ($etatCarte ?? '') === ($cle ?? ''))
+        <a href="{{ request()->fullUrlWithQuery(['etat' => $cle ?: null, 'page' => null]) }}"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold border transition-all {{ $actif ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm shadow-emerald-600/20' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900' }}">
+            <i class="fa-solid {{ $onglet['icone'] }} text-[11px]"></i>
+            {{ $onglet['label'] }}
+            <span class="px-1.5 py-0.5 rounded-md text-[10px] {{ $actif ? 'bg-white/20' : 'bg-slate-100 text-slate-500' }}">{{ $onglet['compte'] }}</span>
+        </a>
+    @endforeach
+</div>
+
+<!-- Barre d'actions sur la sélection -->
+<form method="POST" action="{{ route('admin.agents.etat-carte') }}" id="etatForm"
+      class="hidden items-center flex-wrap gap-2 mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-2xl"
+      onsubmit="return confirmerChangementEtat(this);">
+    @csrf
+    <span class="text-xs font-bold text-emerald-900 mr-2">
+        <i class="fa-solid fa-square-check"></i> <span id="nbSelection">0</span> agent(s) sélectionné(s)
+    </span>
+    <select name="action" class="px-3 py-2 bg-white border border-emerald-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-emerald-600">
+        <option value="remise">Marquer comme remises</option>
+        <option value="imprimee">Marquer comme imprimées</option>
+        <option value="annuler_remise">Annuler la remise (→ À remettre)</option>
+        <option value="non_imprimee">Repasser en « Non imprimée »</option>
+    </select>
+    <button type="submit" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold transition-all">
+        Appliquer
+    </button>
+    <p class="w-full text-[11px] text-emerald-800/80 mt-1">
+        Une carte ne peut être marquée remise que si elle a déjà été imprimée.
+    </p>
+</form>
+
 <!-- Total Stats Counter -->
 <div class="flex items-center justify-between mb-4 px-1">
     <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider">
@@ -272,19 +318,27 @@
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+                        <th class="py-4 pl-5 pr-1 w-8">
+                            <input type="checkbox" id="toutSelectionner" title="Tout sélectionner" class="w-4 h-4 rounded border-slate-300 accent-emerald-600 cursor-pointer">
+                        </th>
                         <th class="py-4 px-5">Agent</th>
                         <th class="py-4 px-4">Matricule</th>
                         <th class="py-4 px-4">Poste / Fonction</th>
                         <th class="py-4 px-4">Ministère / Service</th>
                         <th class="py-4 px-4">Intégration FP</th>
                         <th class="py-4 px-4">Contact</th>
+                        <th class="py-4 px-4">État carte</th>
                         <th class="py-4 px-5 text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-xs">
                     @foreach ($agents as $agent)
                         <tr class="hover:bg-slate-50/80 transition-colors group">
-                            
+                            <!-- Sélection -->
+                            <td class="py-3.5 pl-5 pr-1">
+                                <input type="checkbox" name="agents[]" value="{{ $agent->id }}" form="etatForm" class="case-agent w-4 h-4 rounded border-slate-300 accent-emerald-600 cursor-pointer">
+                            </td>
+
                             <!-- Agent Photo & Name -->
                             <td class="py-3.5 px-5">
                                 <div class="flex items-center space-x-3">
@@ -339,6 +393,28 @@
                                 @if (!$agent->telephone && !$agent->email)
                                     <span class="text-slate-400 font-medium">—</span>
                                 @endif
+                            </td>
+
+                            <!-- État de la carte -->
+                            <td class="py-3.5 px-4 whitespace-nowrap">
+                                @switch($agent->etat_carte)
+                                    @case(\App\Models\Agent::ETAT_REMISE)
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-bold">
+                                            <i class="fa-solid fa-circle-check"></i> Remise
+                                        </span>
+                                        <a href="{{ route('admin.historique.index', ['agent' => $agent->id]) }}" class="block text-[10px] text-slate-400 hover:text-emerald-700 mt-1" title="Voir l'historique">le {{ $agent->carte_remise_le->format('d/m/Y') }} <i class="fa-solid fa-clock-rotate-left"></i></a>
+                                        @break
+                                    @case(\App\Models\Agent::ETAT_A_REMETTRE)
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 border border-amber-300 text-[11px] font-bold">
+                                            <i class="fa-solid fa-hourglass-half"></i> À remettre
+                                        </span>
+                                        <a href="{{ route('admin.historique.index', ['agent' => $agent->id]) }}" class="block text-[10px] text-slate-400 hover:text-emerald-700 mt-1" title="Voir l'historique">imprimée le {{ $agent->carte_imprimee_le->format('d/m/Y') }} <i class="fa-solid fa-clock-rotate-left"></i></a>
+                                        @break
+                                    @default
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 border border-slate-200 text-[11px] font-bold">
+                                            <i class="fa-solid fa-print"></i> Non imprimée
+                                        </span>
+                                @endswitch
                             </td>
 
                             <!-- Actions -->
@@ -409,6 +485,40 @@
 @endsection
 
 @push('scripts')
+<script>
+// ===== Sélection multiple pour changer l'état des cartes =====
+(function () {
+    const form = document.getElementById('etatForm');
+    const tout = document.getElementById('toutSelectionner');
+    const cases = () => Array.from(document.querySelectorAll('.case-agent'));
+
+    function majBarre() {
+        const n = cases().filter(c => c.checked).length;
+        document.getElementById('nbSelection').textContent = n;
+        form.classList.toggle('hidden', n === 0);
+        form.classList.toggle('flex', n > 0);
+        if (tout) {
+            tout.checked = n > 0 && n === cases().length;
+            tout.indeterminate = n > 0 && n < cases().length;
+        }
+    }
+
+    cases().forEach(c => c.addEventListener('change', majBarre));
+    if (tout) {
+        tout.addEventListener('change', () => {
+            cases().forEach(c => c.checked = tout.checked);
+            majBarre();
+        });
+    }
+})();
+
+function confirmerChangementEtat(form) {
+    const n = document.getElementById('nbSelection').textContent;
+    const action = form.querySelector('select[name="action"]');
+    const libelle = action.options[action.selectedIndex].text;
+    return confirm(`${libelle} pour ${n} agent(s) ?`);
+}
+</script>
 <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.6.1/lib/qr-code-styling.min.js"></script>
 <script>
 /**

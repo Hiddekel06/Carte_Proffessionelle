@@ -14,6 +14,7 @@ class ExampleTest extends TestCase
     {
         $response = $this->get('/');
 
-        $response->assertStatus(200);
+        // La racine redirige vers l'administration (puis vers la connexion)
+        $response->assertRedirect(route('admin.agents.index'));
     }
 }

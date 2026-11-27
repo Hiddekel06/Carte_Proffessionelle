@@ -100,6 +100,14 @@
                         <span>Ajouter un Agent</span>
                     </a>
 
+                    <!-- Historique des cartes -->
+                    <a href="{{ route('admin.historique.index') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 {{ request()->routeIs('admin.historique.*') ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
+                        <span class="p-1.5 rounded-lg {{ request()->routeIs('admin.historique.*') ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-500' }}">
+                            <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+                        </span>
+                        <span>Historique des cartes</span>
+                    </a>
+
                     <p class="px-3 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mt-6 mb-2">Importations</p>
 
                     <!-- Import Excel -->

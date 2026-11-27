@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AgentController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\HistoriqueCarteController;
 use App\Http\Controllers\PublicAgentController;
 use Illuminate\Support\Facades\Route;
 
@@ -13,7 +14,8 @@ Route::get('/', function () {
 // Authentification Super Admin (Invités uniquement)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [AuthController::class, 'login']);
+    // 20 tentatives max par minute et par adresse IP (en plus du blocage par compte)
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:20,1');
 });
 
 // Déconnexion
@@ -32,7 +34,13 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::get('import-zip', [AgentController::class, 'showImportZip'])->name('agents.show-import-zip');
     Route::get('agents/{agent}/download-qr', [AgentController::class, 'downloadQr'])->name('agents.download-qr');
     Route::get('agents/{agent}/badge', [AgentController::class, 'showBadge'])->name('agents.badge');
-    Route::resource('agents', AgentController::class);
+    Route::post('agents/{agent}/carte-imprimee', [AgentController::class, 'marquerImprimee'])->name('agents.carte-imprimee');
+    Route::post('agents/etat-carte', [AgentController::class, 'changerEtatCarte'])->name('agents.etat-carte');
+    Route::get('historique', [HistoriqueCarteController::class, 'index'])->name('historique.index');
+    Route::resource('agents', AgentController::class)->except('show');
+    // Pas de page « détail » : on redirige vers la fiche de modification
+    Route::get('agents/{agent}', fn (\App\Models\Agent $agent) => redirect()->route('admin.agents.edit', $agent))
+        ->name('agents.show');
     Route::post('agents/import-excel', [AgentController::class, 'importExcel'])->name('agents.import-excel');
     Route::post('agents/import-zip', [AgentController::class, 'importZip'])->name('agents.import-zip');
 });

@@ -109,10 +109,12 @@
                     </div>
 
                     <!-- Date d'intégration FP -->
-                    <div class="sm:col-span-2">
+                    <div>
                         <label class="block text-xs font-bold text-slate-800 mb-1">Date d'intégration à la FP</label>
                         <input type="date" name="date_integration_fp" value="{{ old('date_integration_fp', $agent->date_integration_fp ? $agent->date_integration_fp->format('Y-m-d') : '') }}" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-emerald-600">
                     </div>
+
+                    @include('admin.agents.partials.modele_carte', ['agent' => $agent])
                 </div>
             </div>
 
